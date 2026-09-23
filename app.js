@@ -119,6 +119,8 @@ async function uploadLogoFile(file) {
 
     return data.publicUrl;
 }
+// Global variable to track which team is currently being edited
+let editingTeamId = null;
 
 async function saveTeam(directData = null) {
     let newTeam;
@@ -127,7 +129,7 @@ async function saveTeam(directData = null) {
     } else {
         const name = document.getElementById("team-name-input").value.trim();
         const fileInput = document.getElementById("team-logo-file");
-        let logoUrl = 'https://via.placeholder.com/50?text=RL';
+        let logoUrl = null;
 
         if (!name) return alert("Team name required.");
 
@@ -136,17 +138,53 @@ async function saveTeam(directData = null) {
             if (uploadedUrl) logoUrl = uploadedUrl;
         }
 
-        newTeam = { id: name.toLowerCase().replace(/\s+/g, '-'), name: name, logo: logoUrl };
+        // Determine Team ID (keep original ID if editing, otherwise generate a new slug)
+        const teamId = editingTeamId || name.toLowerCase().replace(/\s+/g, '-');
+
+        // Preserve current logo if no new file uploaded during an edit
+        if (!logoUrl && editingTeamId) {
+            const currentTeam = teams.find(t => t.id === editingTeamId);
+            logoUrl = currentTeam?.logo || 'https://via.placeholder.com/50?text=RL';
+        } else if (!logoUrl) {
+            logoUrl = 'https://via.placeholder.com/50?text=RL';
+        }
+
+        newTeam = { id: teamId, name: name, logo: logoUrl };
     }
 
     const { error } = await supabaseClient.from('teams').upsert(newTeam);
     if (error) return alert("Error saving team: " + error.message);
 
-    if (!directData) {
-        document.getElementById("team-name-input").value = "";
-        document.getElementById("team-logo-file").value = "";
-    }
+    // Reset Form & Editing State
+    editingTeamId = null;
+    document.getElementById("team-name-input").value = "";
+    document.getElementById("team-logo-file").value = "";
+    const submitBtn = document.querySelector("#addTeamForm button[type='submit']");
+    if (submitBtn) submitBtn.innerText = "Save Team";
+
     loadData();
+}
+
+// Populate team form for editing
+function editTeam(teamId) {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return;
+
+    editingTeamId = team.id;
+    document.getElementById("team-name-input").value = team.name;
+    
+    // Smooth scroll back up to management panel
+    document.querySelector(".card").scrollIntoView({ behavior: 'smooth' });
+    
+    alert(`Editing "${team.name}". Choose a new logo file to replace the logo, then click Save.`);
+}
+
+// Delete Team Function
+async function deleteTeam(teamId) {
+    if (!confirm("Are you sure you want to delete this team? Players attached to this team will remain in DB.")) return;
+    const { error } = await supabaseClient.from('teams').delete().eq('id', teamId);
+    if (error) alert("Error deleting team: " + error.message);
+    else loadData();
 }
 
 function extractPlaylistStats(segments, playlistName) {
@@ -365,14 +403,20 @@ function renderAll() {
         }).join('');
 
         card.innerHTML = `
-            <div class="team-header">
-                <img src="${team.logo}" class="team-logo" alt="${team.name}">
-                <div class="team-info">
-                    <h3>${team.name}</h3>
-                    <div class="avg-mmr">Avg 3v3 MMR: ${avgMMR}</div>
+            <div class="team-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${team.logo}" class="team-logo" alt="${team.name}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 6px;">
+                    <div class="team-info">
+                        <h3 style="margin: 0;">${team.name}</h3>
+                        <div class="avg-mmr">Avg 3v3 MMR: ${avgMMR}</div>
+                    </div>
+                </div>
+                <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 6px;">
+                    <button onclick="editTeam('${team.id}')" style="background-color: #ff9800; padding: 4px 10px; font-size: 0.85em;">Edit</button>
+                    <button onclick="deleteTeam('${team.id}')" style="background-color: #f44336; padding: 4px 10px; font-size: 0.85em;">Delete</button>
                 </div>
             </div>
-            <div class="player-list">
+            <div class="player-list" style="margin-top: 15px;">
                 ${playersHTML || '<div class="notes">No players listed.</div>'}
             </div>
         `;
@@ -452,6 +496,8 @@ window.toggleAuthModal = toggleAuthModal;
 window.loginAdmin = loginAdmin;
 window.logoutAdmin = logoutAdmin;
 window.saveTeam = saveTeam;
+window.editTeam = editTeam;
+window.deleteTeam = deleteTeam;
 window.addPlayerFormSubmit = addPlayerFormSubmit;
 window.addPlayerManualSubmit = addPlayerManualSubmit;
 window.switchPlayerTab = switchPlayerTab;

@@ -21,69 +21,78 @@
 
             <!-- Global Search & Filters -->
             <div class="filters">
-                <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()">
+                <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()" autocomplete="off">
             </div>
         </header>
 
         <!-- Login Modal / Form -->
         <div id="login-modal" class="card hidden">
             <h3>Admin Login</h3>
-            <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
-                <input type="text" id="admin-email" placeholder="Username / Email">
-                <input type="password" id="admin-password" placeholder="Password">
-                <button onclick="loginAdmin()">Sign In</button>
-                <button onclick="toggleAuthModal()" style="background-color: #555;">Cancel</button>
-            </div>
+            <form style="display: flex; gap: 10px; margin-top: 10px; align-items: center;" autocomplete="off" onsubmit="event.preventDefault(); loginAdmin();">
+                <input type="text" id="admin-email" placeholder="Username / Email" autocomplete="off">
+                <input type="password" id="admin-password" placeholder="Password" autocomplete="new-password">
+                <button type="submit">Sign In</button>
+                <button type="button" onclick="toggleAuthModal()" style="background-color: #555;">Cancel</button>
+            </form>
         </div>
 
         <!-- Admin Controls Panel -->
         <section id="admin-panel" class="card admin-only hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2>Admin Management Panel</h2>
-                <button onclick="refreshAllPlayers()" style="background-color: #ff9800; color: black;">&#128257; Refresh All Rosters</button>
             </div>
             
             <div class="form-grid">
                 <!-- Add / Edit Team Form -->
                 <div class="form-box">
                     <h3>Add / Edit Team</h3>
-                    <form id="addTeamForm" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required>
+                    <form id="addTeamForm" autocomplete="off" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required autocomplete="off">
                         <label style="font-size: 0.85rem; color: #9ba3b4;">Upload Team Logo:</label>
                         <input type="file" id="team-logo-file" accept="image/*">
                         <button type="submit" class="btn btn-primary">Save Team</button>
                     </form>
                 </div>
 
-                <!-- Add Player Card -->
+                <!-- Add Player Card (MANUAL ONLY NOW) -->
                 <div class="form-box">
                     <h3>Add Player to Roster</h3>
-                
-                    <!-- MANUAL ENTRY FORM (Now the only form) -->
-                    <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event);" style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required />
+                    
+                    <form id="addPlayerManualForm" autocomplete="off" onsubmit="addPlayerManualSubmit(event);" style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required autocomplete="off" />
                         
-                        <!-- Searchable Team Dropdown -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <select id="manualPlatformSelect" required>
-                                <option value="epic">Epic Games</option>
-                                <option value="steam">Steam</option>
-                                <option value="xbl">Xbox</option>
-                                <option value="psn">PlayStation</option>
-                            </select>
-                            <input type="text" id="manualTeamInput" list="teams-list" placeholder="Type or Select Team..." required />
-                        </div>
+                        <!-- Searchable Team Droplist -->
+                        <datalist id="teams-list"></datalist>
+                        <input type="text" id="manualTeamInput" list="teams-list" placeholder="Type or Select Team..." required autocomplete="off" />
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <input type="number" id="manual1v1MMR" placeholder="1v1 MMR" />
-                            <input type="number" id="manual2v2MMR" placeholder="2v2 MMR" />
-                            <input type="number" id="manual3v3MMR" placeholder="3v3 MMR" />
-                            <input type="number" id="manualPeakMMR" placeholder="Peak MMR" />
+                        <!-- 1v1 Grid -->
+                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px;">1v1 Stats:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <input type="number" id="m1v1_cur" placeholder="Current MMR" autocomplete="off" />
+                            <input type="number" id="m1v1_best" placeholder="Best MMR" autocomplete="off" />
+                            <input type="number" id="m1v1_season" placeholder="Best Season (e.g. 15)" autocomplete="off" />
+                        </div>
+
+                        <!-- 2v2 Grid -->
+                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px; margin-top: 5px;">2v2 Stats:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <input type="number" id="m2v2_cur" placeholder="Current MMR" autocomplete="off" />
+                            <input type="number" id="m2v2_best" placeholder="Best MMR" autocomplete="off" />
+                            <input type="number" id="m2v2_season" placeholder="Best Season" autocomplete="off" />
+                        </div>
+
+                        <!-- 3v3 Grid -->
+                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px; margin-top: 5px;">3v3 Stats:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <input type="number" id="m3v3_cur" placeholder="Current MMR" autocomplete="off" />
+                            <input type="number" id="m3v3_best" placeholder="Best MMR" autocomplete="off" />
+                            <input type="number" id="m3v3_season" placeholder="Best Season" autocomplete="off" />
                         </div>
                 
-                        <input type="url" id="manualTrackerUrl" placeholder="Tracker Profile URL (Optional)" />
-                        <input type="text" id="manualAlias" placeholder="Tournament Alias (Optional)" />
-                        <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" />
+                        <input type="url" id="manualTrackerUrl" placeholder="Tracker Profile URL (Optional)" autocomplete="off" style="margin-top: 5px;" />
+                        <input type="text" id="manualAlias" placeholder="Player Alias/Other known names (Optional)" autocomplete="off" />
+                        <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" autocomplete="off" />
+                        
                         <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Save Player</button>
                     </form>
                 </div>

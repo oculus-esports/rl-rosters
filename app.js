@@ -20,7 +20,6 @@ async function loadData() {
     });
 
     const { data: teamsData } = await supabaseClient.from('teams').select('*');
-    // Maintain stable player ordering so saving edits doesn't shuffle positions
     const { data: playersData } = await supabaseClient.from('players').select('*').order('id', { ascending: true });
     const { data: historyData } = await supabaseClient.from('rank_history').select('*').order('id', { ascending: false });
 
@@ -268,18 +267,16 @@ async function addPlayerManualSubmit(e) {
 }
 
 function enableInlinePlayerEdit(playerId) {
-    // Show alias edit field
     document.getElementById(`view-alias-${playerId}`).classList.add('hidden');
     document.getElementById(`edit-alias-${playerId}`).classList.remove('hidden');
 
-    // Show MMR edit fields
     ['1v1', '2v2', '3v3'].forEach(mode => {
         document.getElementById(`view-${mode}-${playerId}`).classList.add('hidden');
         document.getElementById(`edit-${mode}-${playerId}`).classList.remove('hidden');
     });
 
     const editBtn = document.getElementById(`edit-player-btn-${playerId}`);
-    editBtn.innerText = "Save Player";
+    editBtn.innerText = "Save";
     editBtn.style.backgroundColor = "#4caf50";
     editBtn.style.color = "white";
     editBtn.setAttribute("onclick", `saveInlinePlayer('${playerId}')`);
@@ -299,7 +296,6 @@ async function saveInlinePlayer(playerId) {
 
     let updatedPlayer = { ...player, alias: newAlias };
     
-    // Auto-update bests and seasons if current exceeds best
     updatedPlayer.duel_1v1_current_mmr = new1v1Cur;
     if (new1v1Cur > updatedPlayer.duel_1v1_best_mmr) {
         updatedPlayer.duel_1v1_best_mmr = new1v1Cur;
@@ -329,7 +325,7 @@ async function saveInlinePlayer(playerId) {
     const { error } = await supabaseClient.from('players').upsert(updatedPlayer);
     if (error) {
         alert("Error updating player: " + error.message);
-        btn.innerText = "Edit Player";
+        btn.innerText = "Edit";
         return;
     }
 
@@ -361,9 +357,9 @@ function renderAll() {
 
     const grid = document.getElementById("teams-grid");
     if (!grid) return;
+    grid.style.gridTemplateColumns = "1fr"; // Forces 1 card per row
     grid.innerHTML = "";
 
-    // Always Pin OU / Oklahoma to the top of the team array
     const sortedTeams = [...teams].sort((a, b) => {
         const isAOU = a.id === 'ou' || a.name.toLowerCase() === 'university of oklahoma';
         const isBOU = b.id === 'ou' || b.name.toLowerCase() === 'university of oklahoma';
@@ -386,7 +382,6 @@ function renderAll() {
         const card = document.createElement("div");
         card.className = "team-card";
         
-        // Custom branding style if it's Oklahoma
         if (isOU) {
             card.style.border = "2px solid #841617";
             card.style.boxShadow = "0 0 15px rgba(132, 22, 23, 0.3)";
@@ -397,107 +392,113 @@ function renderAll() {
             let trendHtml = "";
             if (pHistory.length > 1) {
                 const diff = p.standard_3v3_current_mmr - pHistory[1].standard_3v3_mmr;
-                if (diff > 0) trendHtml = `<span style="color: #4caf50; font-size:0.85em;">&#128200; +${diff}</span>`;
-                else if (diff < 0) trendHtml = `<span style="color: #f44336; font-size:0.85em;">&#128201; ${diff}</span>`;
+                if (diff > 0) trendHtml = `<span style="color: #4caf50; font-size:0.8em;">+${diff}</span>`;
+                else if (diff < 0) trendHtml = `<span style="color: #f44336; font-size:0.8em;">${diff}</span>`;
             }
 
             const displayAlias = p.alias ? p.alias : p.handle;
             const displayHandle = p.alias ? p.handle : '';
 
             const trackerLinkHTML = p.tracker_url 
-                ? `<a href="${p.tracker_url}" target="_blank" style="color: #bbb; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; gap: 4px; border: 1px solid #444; padding: 4px 8px; border-radius: 4px; background: #222; transition: all 0.2s;" onmouseover="this.style.borderColor='#4CAF50'; this.style.color='#4CAF50'" onmouseout="this.style.borderColor='#444'; this.style.color='#bbb'">🔗 Tracker</a>` 
+                ? `<a href="${p.tracker_url}" target="_blank" style="color: #38ef7d; text-decoration: none; font-size: 0.8em; border: 1px solid #38ef7d44; padding: 3px 8px; border-radius: 4px; background: #38ef7d11; text-align: center;">🔗 Tracker</a>` 
                 : '';
 
             return `
-            <div class="player-item" style="background: #1e1e24; border: 1px solid #2d2d33; border-radius: 8px; padding: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            <div class="player-column" style="flex: 1; min-width: 200px; background: #1e1e24; border: 1px solid #2d2d33; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
                 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                <!-- Player Name / Header -->
+                <div style="border-bottom: 1px solid #2d2d33; padding-bottom: 10px;">
                     <div id="view-alias-${p.id}" style="display: flex; flex-direction: column;">
-                        <span style="font-size: 1.4em; font-weight: 800; color: #fff; letter-spacing: 0.5px;">${displayAlias}</span>
-                        ${displayHandle ? `<span style="font-size: 0.9em; color: #777;">${displayHandle}</span>` : ''}
+                        <span style="font-size: 1.25em; font-weight: 800; color: #fff; line-height: 1.2;">${displayAlias}</span>
+                        ${displayHandle ? `<span style="font-size: 0.85em; color: #777; margin-top: 2px;">${displayHandle}</span>` : ''}
                     </div>
-                    <div id="edit-alias-${p.id}" class="hidden" style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-                        <label style="font-size: 0.75em; color: #aaa;">Edit Alias / Other Known Names:</label>
-                        <input type="text" id="input-alias-${p.id}" value="${p.alias || ''}" placeholder="Alias (optional)" style="font-size: 1.1em; font-weight: bold; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
-                        <span style="font-size: 0.8em; color: #666;">Tag: ${p.handle}</span>
+                    <div id="edit-alias-${p.id}" class="hidden" style="display: flex; flex-direction: column; gap: 4px;">
+                        <input type="text" id="input-alias-${p.id}" value="${p.alias || ''}" placeholder="Alias" style="font-size: 0.95em; padding: 4px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px; width: 100%; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <div style="background: linear-gradient(90deg, #ff980015, transparent); border-left: 4px solid #ff9800; padding: 6px 12px; margin-bottom: 15px; border-radius: 0 4px 4px 0; color: #ffb74d; font-size: 0.9em;">
+                <!-- Peak Badge -->
+                <div style="background: linear-gradient(90deg, #ff980015, transparent); border-left: 3px solid #ff9800; padding: 4px 8px; border-radius: 0 4px 4px 0; color: #ffb74d; font-size: 0.8em;">
                     &#127942; <strong>Peak:</strong> ${p.peak_rating || 'N/A'} MMR ${p.peak_season ? `<span style="color: #cc8e3a;">(S${p.peak_season})</span>` : ''}
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                <!-- Playlist Stats Breakdown -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
                     
-                    <div style="background: #25252b; padding: 12px; border-radius: 6px; text-align: left; border: 1px solid #333;">
-                        <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600;">1v1 Duel</div>
-                        <div id="view-1v1-${p.id}">
-                            <div style="font-size: 1.2em; font-weight: bold; color: #fff;">${p.duel_1v1_current_mmr || 0}</div>
-                            <div style="font-size: 0.85em; color: #888; margin-top: 4px;">Best: ${p.duel_1v1_best_mmr || 0} ${p.duel_1v1_best_season ? `(S${p.duel_1v1_best_season})` : ''}</div>
+                    <!-- 1v1 -->
+                    <div style="background: #25252b; padding: 8px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.7em; color: #aaa; text-transform: uppercase; font-weight: 600;">1v1</span>
+                        <div id="view-1v1-${p.id}" style="text-align: right;">
+                            <span style="font-weight: bold; color: #fff; font-size: 0.95em;">${p.duel_1v1_current_mmr || 0}</span>
+                            <span style="font-size: 0.75em; color: #777; margin-left: 4px;">(${p.duel_1v1_best_mmr || 0})</span>
                         </div>
                         <div id="edit-1v1-${p.id}" class="hidden">
-                            <input type="number" id="input-1v1-${p.id}" value="${p.duel_1v1_current_mmr || 0}" style="width: 100%; box-sizing: border-box; font-size: 1.1em; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
+                            <input type="number" id="input-1v1-${p.id}" value="${p.duel_1v1_current_mmr || 0}" style="width: 60px; font-size: 0.85em; padding: 2px 4px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
                         </div>
                     </div>
-                    
-                    <div style="background: #25252b; padding: 12px; border-radius: 6px; text-align: left; border: 1px solid #333;">
-                        <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600;">2v2 Doubles</div>
-                        <div id="view-2v2-${p.id}">
-                            <div style="font-size: 1.2em; font-weight: bold; color: #fff;">${p.doubles_2v2_current_mmr || 0}</div>
-                            <div style="font-size: 0.85em; color: #888; margin-top: 4px;">Best: ${p.doubles_2v2_best_mmr || 0} ${p.doubles_2v2_best_season ? `(S${p.doubles_2v2_best_season})` : ''}</div>
+
+                    <!-- 2v2 -->
+                    <div style="background: #25252b; padding: 8px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.7em; color: #aaa; text-transform: uppercase; font-weight: 600;">2v2</span>
+                        <div id="view-2v2-${p.id}" style="text-align: right;">
+                            <span style="font-weight: bold; color: #fff; font-size: 0.95em;">${p.doubles_2v2_current_mmr || 0}</span>
+                            <span style="font-size: 0.75em; color: #777; margin-left: 4px;">(${p.doubles_2v2_best_mmr || 0})</span>
                         </div>
                         <div id="edit-2v2-${p.id}" class="hidden">
-                            <input type="number" id="input-2v2-${p.id}" value="${p.doubles_2v2_current_mmr || 0}" style="width: 100%; box-sizing: border-box; font-size: 1.1em; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
+                            <input type="number" id="input-2v2-${p.id}" value="${p.doubles_2v2_current_mmr || 0}" style="width: 60px; font-size: 0.85em; padding: 2px 4px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
                         </div>
                     </div>
-                    
-                    <div style="background: #25252b; padding: 12px; border-radius: 6px; text-align: left; border: 1px solid #333;">
-                        <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600;">3v3 Standard</div>
-                        <div id="view-3v3-${p.id}">
-                            <div style="font-size: 1.2em; font-weight: bold; color: #fff; display: flex; align-items: baseline; justify-content: space-between;">
-                                <span>${p.standard_3v3_current_mmr || 0}</span>
-                                <span>${trendHtml}</span>
-                            </div>
-                            <div style="font-size: 0.85em; color: #888; margin-top: 4px;">Best: ${p.standard_3v3_best_mmr || 0} ${p.standard_3v3_best_season ? `(S${p.standard_3v3_best_season})` : ''}</div>
+
+                    <!-- 3v3 -->
+                    <div style="background: #25252b; padding: 8px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.7em; color: #aaa; text-transform: uppercase; font-weight: 600;">3v3</span>
+                        <div id="view-3v3-${p.id}" style="text-align: right;">
+                            <span style="font-weight: bold; color: #fff; font-size: 0.95em;">${p.standard_3v3_current_mmr || 0}</span>
+                            <span style="font-size: 0.75em; color: #777; margin-left: 2px;">(${p.standard_3v3_best_mmr || 0})</span>
+                            ${trendHtml ? `<span style="margin-left:4px;">${trendHtml}</span>` : ''}
                         </div>
                         <div id="edit-3v3-${p.id}" class="hidden">
-                            <input type="number" id="input-3v3-${p.id}" value="${p.standard_3v3_current_mmr || 0}" style="width: 100%; box-sizing: border-box; font-size: 1.1em; padding: 6px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
+                            <input type="number" id="input-3v3-${p.id}" value="${p.standard_3v3_current_mmr || 0}" style="width: 60px; font-size: 0.85em; padding: 2px 4px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
                         </div>
+                    </div>
+
+                </div>
+
+                ${p.notes ? `<div style="background: #19191d; padding: 6px 8px; border-radius: 4px; font-size: 0.75em; color: #aaa; border: 1px solid #2d2d33;"><em>📝 ${p.notes}</em></div>` : ''}
+
+                <!-- Footer & Actions -->
+                <div style="border-top: 1px solid #2d2d33; padding-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+                    ${trackerLinkHTML}
+                    <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 6px; justify-content: space-between;">
+                        <button id="edit-player-btn-${p.id}" onclick="enableInlinePlayerEdit('${p.id}')" style="flex: 1; background-color: #ff9800; color: black; padding: 4px; font-size: 0.75em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer;">Edit</button>
+                        <button class="remove-btn" onclick="removePlayer('${p.id}')" style="flex: 1; background-color: #f44336; color: white; padding: 4px; font-size: 0.75em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
                     </div>
                 </div>
 
-                ${p.notes ? `<div style="background: #19191d; padding: 10px 12px; border-radius: 4px; font-size: 0.85em; color: #aaa; border: 1px solid #2d2d33; margin-bottom: 15px;"><em>📝 ${p.notes}</em></div>` : ''}
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #2d2d33; padding-top: 12px;">
-                    <span style="font-size: 0.75em; color: #666;">Last Updated: ${p.last_updated}</span>
-                    <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 8px; align-items: center;">
-                        ${trackerLinkHTML}
-                        <button id="edit-player-btn-${p.id}" onclick="enableInlinePlayerEdit('${p.id}')" style="background-color: #ff9800; color: black; padding: 4px 10px; font-size: 0.85em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer;">Edit Player</button>
-                        <button class="remove-btn" onclick="removePlayer('${p.id}')" style="background-color: #f44336; color: white; padding: 4px 10px; font-size: 0.85em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
-                    </div>
-                </div>
             </div>`;
         }).join('');
 
         card.innerHTML = `
-            <div class="team-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px; ${isOU ? 'background: linear-gradient(90deg, rgba(132, 22, 23, 0.15), transparent); padding: 12px; border-radius: 6px;' : ''}">
+            <div class="team-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 15px; ${isOU ? 'background: linear-gradient(90deg, rgba(132, 22, 23, 0.2), transparent); padding: 12px; border-radius: 6px;' : ''}">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <img src="${team.logo}" class="team-logo" alt="${team.name}" style="width: 54px; height: 54px; object-fit: contain; border-radius: 8px; background: #222; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        <img src="${team.logo}" class="team-logo" alt="${team.name}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #222; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
                         <input type="file" id="edit-logo-${team.id}" accept="image/*" class="hidden" style="max-width: 140px; font-size: 0.7em;">
                     </div>
                     <div class="team-info">
-                        <h3 style="margin: 0; font-size: 1.4em; color: #fff;" id="display-name-${team.id}">${team.name} ${isOU ? '🏆' : ''}</h3>
-                        <input type="text" id="input-name-${team.id}" class="hidden" value="${team.name}" style="font-size: 1.2em; font-weight: bold; margin-bottom: 5px; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #111; color: white;">
-                        <div class="avg-mmr" style="color: #ffb74d; font-size: 0.9em; font-weight: 600; margin-top: 4px;">Avg 3v3 MMR: ${avgMMR}</div>
+                        <h3 style="margin: 0; font-size: 1.3em; color: #fff;" id="display-name-${team.id}">${team.name} ${isOU ? '🏆' : ''}</h3>
+                        <input type="text" id="input-name-${team.id}" class="hidden" value="${team.name}" style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px; padding: 4px; border-radius: 4px; border: 1px solid #555; background: #111; color: white;">
+                        <div class="avg-mmr" style="color: #ffb74d; font-size: 0.85em; font-weight: 600; margin-top: 2px;">Avg 3v3 MMR: ${avgMMR}</div>
                     </div>
                 </div>
                 <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 8px;">
-                    <button id="edit-btn-${team.id}" onclick="enableInlineEdit('${team.id}')" style="background-color: #ff9800; padding: 6px 14px; font-size: 0.85em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: black;">Edit</button>
-                    <button onclick="deleteTeam('${team.id}')" style="background-color: #f44336; padding: 6px 14px; font-size: 0.85em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: white;">Delete</button>
+                    <button id="edit-btn-${team.id}" onclick="enableInlineEdit('${team.id}')" style="background-color: #ff9800; padding: 5px 12px; font-size: 0.8em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: black;">Edit Team</button>
+                    <button onclick="deleteTeam('${team.id}')" style="background-color: #f44336; padding: 5px 12px; font-size: 0.8em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: white;">Delete Team</button>
                 </div>
             </div>
-            <div class="player-list">
+            
+            <!-- Horizontal Flex Box for Player Columns -->
+            <div class="player-list" style="display: flex; flex-wrap: wrap; gap: 15px;">
                 ${playersHTML || '<div class="notes" style="color: #666; font-style: italic;">No players listed.</div>'}
             </div>
         `;

@@ -59,33 +59,36 @@
                 
                   <!-- Mode Toggle Tabs -->
                   <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button type="button" id="tabAutoBtn" class="btn active" onclick="switchPlayerTab('auto')">Auto (Tracker Link)</button>
-                    <button type="button" id="tabManualBtn" class="btn" onclick="switchPlayerTab('manual')">Manual Entry</button>
+                    <button type="button" id="tabAutoBtn" class="btn active" style="flex: 1;" onclick="switchPlayerTab('auto')">Auto (Tracker Link)</button>
+                    <button type="button" id="tabManualBtn" class="btn" style="flex: 1;" onclick="switchPlayerTab('manual')">Manual Entry</button>
                   </div>
                 
                   <!-- AUTO FETCH FORM -->
-                  <form id="addPlayerForm" onsubmit="addPlayerFormSubmit(event)">
+                  <form id="addPlayerForm" onsubmit="addPlayerFormSubmit(event)" style="display: flex; flex-direction: column; gap: 10px;">
                     <input type="url" id="playerTrackerUrl" placeholder="https://rocketleague.tracker.network/rocket-league/profile/steam/..." required />
                     <select id="playerTeamSelect" required>
                       <option value="">Select Team...</option>
                     </select>
                     <input type="text" id="playerAlias" placeholder="Tournament Alias (Optional)" />
                     <input type="text" id="playerNotes" placeholder="Scouting Notes (Optional)" />
-                    <button type="submit" class="btn btn-primary">Fetch & Add Player</button>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Fetch & Add Player</button>
                   </form>
                 
-                  <!-- MANUAL ENTRY FORM (Hidden by default) -->
-                  <form id="addPlayerManualForm" style="display: none;" onsubmit="addPlayerManualSubmit(event)">
+                  <!-- MANUAL ENTRY FORM -->
+                  <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event)" style="display: none; flex-direction: column; gap: 10px;">
                     <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required />
-                    <select id="manualPlatformSelect" required>
-                      <option value="epic">Epic Games</option>
-                      <option value="steam">Steam</option>
-                      <option value="xbl">Xbox</option>
-                      <option value="psn">PlayStation</option>
-                    </select>
-                    <select id="manualTeamSelect" required>
-                      <option value="">Select Team...</option>
-                    </select>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                      <select id="manualPlatformSelect" required>
+                        <option value="epic">Epic Games</option>
+                        <option value="steam">Steam</option>
+                        <option value="xbl">Xbox</option>
+                        <option value="psn">PlayStation</option>
+                      </select>
+                      <select id="manualTeamSelect" required>
+                        <option value="">Select Team...</option>
+                      </select>
+                    </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                       <input type="number" id="manual1v1MMR" placeholder="1v1 MMR" />
@@ -96,11 +99,9 @@
                 
                     <input type="text" id="manualAlias" placeholder="Tournament Alias (Optional)" />
                     <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" />
-                    <button type="submit" class="btn btn-primary">Save Player Manually</button>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Save Player Manually</button>
                   </form>
                 </div>
-            </div>
-        </section>
 
         <!-- Main Display: Rosters -->
         <section id="rosters-container">

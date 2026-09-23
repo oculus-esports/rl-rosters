@@ -1,7 +1,7 @@
 // 1. Core Config & Initialization
 const SUPABASE_URL = "https://jzdbvjevpbvdnzoiqibl.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_L_AJuwnBborlEq2ysJkkqw_JWC5NkJq"; // Get from Project Settings -> API
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PROXY_URL = "https://damp-king-aaad.jacob-c-ross-1.workers.dev"; 
 
@@ -13,17 +13,17 @@ let rankHistory = [];
 // Initialize & Check Active Auth Session
 async function loadData() {
     // Check if user is logged in
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     setAdminState(!!session);
 
     // Listen for auth changes (login/logout)
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
         setAdminState(!!session);
     });
 
-    const { data: teamsData } = await supabase.from('teams').select('*');
-    const { data: playersData } = await supabase.from('players').select('*');
-    const { data: historyData } = await supabase.from('rank_history').select('*').order('id', { ascending: false });
+    const { data: teamsData } = await supabaseClient.from('teams').select('*');
+    const { data: playersData } = await supabaseClient.from('players').select('*');
+    const { data: historyData } = await supabaseClient.from('rank_history').select('*').order('id', { ascending: false });
 
     teams = teamsData || [];
     players = playersData || [];
@@ -74,7 +74,7 @@ async function loginAdmin() {
         email = "ourl@esports.com";
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
     });
@@ -89,7 +89,7 @@ async function loginAdmin() {
 }
 
 async function logoutAdmin() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
 }
 
 // Upload Logo File to Supabase Storage Bucket
@@ -98,7 +98,7 @@ async function uploadLogoFile(file) {
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `logos/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseClient.storage
         .from('team-logos')
         .upload(filePath, file);
 
@@ -107,7 +107,7 @@ async function uploadLogoFile(file) {
         return null;
     }
 
-    const { data } = supabase.storage
+    const { data } = supabaseClient.storage
         .from('team-logos')
         .getPublicUrl(filePath);
 
@@ -133,7 +133,7 @@ async function saveTeam(directData = null) {
         newTeam = { id: name.toLowerCase().replace(/\s+/g, '-'), name: name, logo: logoUrl };
     }
 
-    const { error } = await supabase.from('teams').upsert(newTeam);
+    const { error } = await supabaseClient.from('teams').upsert(newTeam);
     if (error) return alert("Error saving team: " + error.message);
 
     if (!directData) {
@@ -199,7 +199,7 @@ async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes,
             last_updated: currentDate
         };
 
-        const { error: pError } = await supabase.from('players').upsert(playerData);
+        const { error: pError } = await supabaseClient.from('players').upsert(playerData);
         if (pError) throw pError;
 
         const historyData = {
@@ -209,7 +209,7 @@ async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes,
             doubles_2v2_mmr: doubles2v2.currentMMR,
             standard_3v3_mmr: standard3v3.currentMMR
         };
-        await supabase.from('rank_history').insert(historyData);
+        await supabaseClient.from('rank_history').insert(historyData);
 
         return true;
     } catch (e) {
@@ -264,7 +264,7 @@ async function refreshAllPlayers() {
 
 async function removePlayer(playerId) {
     if (!confirm("Are you sure you want to remove this player?")) return;
-    await supabase.from('players').delete().eq('id', playerId);
+    await supabaseClient.from('players').delete().eq('id', playerId);
     loadData();
 }
 
@@ -364,10 +364,6 @@ function renderAll() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadData();
-});
-
 // Expose functions globally to HTML onclick handlers
 window.toggleAuthModal = toggleAuthModal;
 window.loginAdmin = loginAdmin;
@@ -377,3 +373,7 @@ window.addPlayerFormSubmit = addPlayerFormSubmit;
 window.refreshPlayer = refreshPlayer;
 window.refreshAllPlayers = refreshAllPlayers;
 window.removePlayer = removePlayer;
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadData();
+});

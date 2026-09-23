@@ -284,15 +284,13 @@ function renderAll() {
     const query = document.getElementById("search-input") ? document.getElementById("search-input").value.toLowerCase() : "";
     
     const teamSelect = document.getElementById('player-team-select');
-    if (teamSelect) {
-        teamSelect.innerHTML = "";
-        teams.forEach(t => {
-            const opt = document.createElement("option");
-            opt.value = t.id;
-            opt.innerText = t.name;
-            teamSelect.appendChild(opt);
-        });
-    }
+    const manualTeamSelect = document.getElementById('manualTeamSelect');
+    
+    const teamOptionsHTML = '<option value="">Select Team...</option>' + 
+        teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    
+    if (teamSelect) teamSelect.innerHTML = teamOptionsHTML;
+    if (manualTeamSelect) manualTeamSelect.innerHTML = teamOptionsHTML;
 
     const grid = document.getElementById("teams-grid");
     if (!grid) return;
@@ -449,6 +447,8 @@ window.loginAdmin = loginAdmin;
 window.logoutAdmin = logoutAdmin;
 window.saveTeam = saveTeam;
 window.addPlayerFormSubmit = addPlayerFormSubmit;
+window.addPlayerManualSubmit = addPlayerManualSubmit;
+window.switchPlayerTab = switchPlayerTab;
 window.refreshPlayer = refreshPlayer;
 window.refreshAllPlayers = refreshAllPlayers;
 window.removePlayer = removePlayer;

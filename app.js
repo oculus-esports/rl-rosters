@@ -157,15 +157,20 @@ function extractPlaylistStats(segments, playlistName) {
 
 async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes, playerIdOverride = null) {
     try {
-        const res = await fetch(`${PROXY_URL}?platform=${platform}&username=${username}`);
-        
-        // 1. Check if the response was successful
+        // Route through a public CORS proxy directly from the user's browser
+        const targetUrl = `https://public-api.tracker.gg/v2/rocket-league/standard/profile/${platform}/${encodeURIComponent(username)}`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+
+        const res = await fetch(proxyUrl, {
+            headers: {
+                "TRN-Api-Key": "86ce807c-1e97-43d7-9e3f-d8e6ee078d33"
+            }
+        });
+
         if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`Worker returned status ${res.status}. Check Worker logs or API key.`);
+            throw new Error(`Tracker Network returned status ${res.status}`);
         }
 
-        // 2. Safely parse JSON
         const data = await res.json();
         if (data.errors) throw new Error(data.errors[0].message);
 

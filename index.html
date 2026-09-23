@@ -3,30 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collegiate RL Roster DB</title>
+    <title>OU Esports - Collegiate RL Roster & Scouting DB</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
+        <!-- Top Navigation & Auth -->
         <header>
-            <h1>Collegiate RL Scouting Database</h1>
-            
-            <!-- URL Input Section -->
-            <div class="search-section">
-                <input type="text" id="player-url" placeholder="Paste RL Tracker URL here...">
-                <button onclick="fetchPlayerData()">Add Player to DB</button>
+            <div class="header-top">
+                <h1>OU Esports - RL Scouting & Match DB</h1>
+                <div class="admin-auth">
+                    <span id="admin-status">Mode: Public Viewer</span>
+                    <button id="auth-btn" onclick="toggleAdminLogin()">Admin Login</button>
+                </div>
+            </div>
+
+            <!-- Global Search & Filters -->
+            <div class="filters">
+                <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()">
             </div>
         </header>
 
-        <!-- Filters -->
-        <div class="filters">
-            <input type="text" id="search-team" placeholder="Filter by University/Team..." onkeyup="filterRosters()">
-        </div>
+        <!-- Admin Controls Panel (Hidden by default unless Admin) -->
+        <section id="admin-panel" class="card admin-only hidden">
+            <h2>Admin Management Panel</h2>
+            
+            <div class="form-grid">
+                <!-- Add Team Form -->
+                <div class="form-box">
+                    <h3>Add / Edit Team</h3>
+                    <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)">
+                    <input type="text" id="team-logo-input" placeholder="Logo Image URL (ImgBB / Direct Link)">
+                    <button onclick="saveTeam()">Save Team</button>
+                </div>
 
-        <!-- Roster Display Grid -->
-        <main id="roster-grid">
-            <!-- Player cards will be injected here by JavaScript -->
-        </main>
+                <!-- Add Player Form -->
+                <div class="form-box">
+                    <h3>Add Player to Roster</h3>
+                    <input type="text" id="player-url-input" placeholder="Tracker.gg URL">
+                    <select id="player-team-select"></select>
+                    <input type="text" id="player-alias-input" placeholder="Tournament Alias (Optional)">
+                    <input type="text" id="player-notes-input" placeholder="Scouting Notes (Optional)">
+                    <button onclick="addPlayer()">Fetch & Add Player</button>
+                </div>
+
+                <!-- Log Match Form -->
+                <div class="form-box">
+                    <h3>Log OU Match / Scrim Result</h3>
+                    <select id="match-opponent-select"></select>
+                    <select id="match-type">
+                        <option value="Scrim">Scrim</option>
+                        <option value="NECC">NECC Match</option>
+                        <option value="CRL Qualifier">CRL Qualifier</option>
+                        <option value="Tournament">Other Tournament</option>
+                    </select>
+                    <select id="match-result">
+                        <option value="Win">Win</option>
+                        <option value="Loss">Loss</option>
+                    </select>
+                    <input type="text" id="match-score" placeholder="Score (e.g. 3-1)">
+                    <input type="text" id="match-notes" placeholder="Match notes/recap">
+                    <button onclick="logMatch()">Log Match Result</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Display: Rosters -->
+        <section id="rosters-container">
+            <h2>Collegiate Teams & Rosters</h2>
+            <div id="teams-grid"></div>
+        </section>
+
+        <!-- Match History & OU Progress Section -->
+        <section id="matches-section" class="card">
+            <h2>OU Match & Scrim Progress Log</h2>
+            <div id="match-stats-summary"></div>
+            <table id="matches-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Opponent</th>
+                        <th>Event Type</th>
+                        <th>Result</th>
+                        <th>Score</th>
+                        <th>Notes</th>
+                        <th class="admin-only hidden">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="matches-tbody"></tbody>
+            </table>
+        </section>
     </div>
 
     <script src="app.js"></script>

@@ -1,6 +1,6 @@
 // 1. Core Config & Initialization
 const SUPABASE_URL = "https://jzdbvjevpbvdnzoiqibl.supabase.co"; 
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // Get from Project Settings -> API
+const SUPABASE_ANON_KEY = "sb_publishable_L_AJuwnBborlEq2ysJkkqw_JWC5NkJq"; // Get from Project Settings -> API
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PROXY_URL = "https://damp-king-aaad.jacob-c-ross-1.workers.dev"; // Your Cloudflare Worker

@@ -3,7 +3,7 @@ const SUPABASE_URL = "https://jzdbvjevpbvdnzoiqibl.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_L_AJuwnBborlEq2ysJkkqw_JWC5NkJq"; // Get from Project Settings -> API
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const PROXY_URL = "https://rl-tracker-proxy.vercel.app/api/stats";
+const PROXY_URL = "https://corsproxy.io/?";
 
 let isAdmin = false;
 let teams = [];
@@ -157,10 +157,18 @@ function extractPlaylistStats(segments, playlistName) {
 
 async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes, playerIdOverride = null) {
     try {
-        const res = await fetch(`${PROXY_URL}?platform=${platform}&username=${encodeURIComponent(username)}`);
+        // Direct target URL on Tracker Network's public web route
+        const targetUrl = `https://api.tracker.gg/api/v2/rocket-league/standard/profile/${platform}/${encodeURIComponent(username)}`;
+        
+        // Wrap with corsproxy.io to bypass browser CORS checks
+        const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
 
         if (!res.ok) {
-            throw new Error(`Proxy returned status ${res.status}`);
+            throw new Error(`Tracker Network returned status ${res.status}`);
         }
 
         const data = await res.json();

@@ -98,9 +98,15 @@ async function uploadLogoFile(file) {
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `logos/${fileName}`;
 
+    // Get current session for authenticated upload
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
     const { error: uploadError } = await supabaseClient.storage
         .from('team-logos')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+        });
 
     if (uploadError) {
         alert("Logo upload error: " + uploadError.message);

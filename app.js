@@ -10,11 +10,9 @@ let rankHistory = [];
 
 // Initialize & Check Active Auth Session
 async function loadData() {
-    // Check if user is logged in
     const { data: { session } } = await supabaseClient.auth.getSession();
     setAdminState(!!session);
 
-    // Listen for auth changes (login/logout)
     supabaseClient.auth.onAuthStateChange((_event, session) => {
         setAdminState(!!session);
     });
@@ -59,23 +57,16 @@ function setAdminState(loggedIn) {
 }
 
 function toggleAuthModal() {
-    const modal = document.getElementById("login-modal");
-    modal.classList.toggle("hidden");
+    document.getElementById("login-modal").classList.toggle("hidden");
 }
 
 async function loginAdmin() {
     let email = document.getElementById("admin-email").value.trim();
     const password = document.getElementById("admin-password").value.trim();
 
-    // Default username fallback to email format if user entered "ourl"
-    if (email.toLowerCase() === "ourl") {
-        email = "jacobross@ou.edu";
-    }
+    if (email.toLowerCase() === "ourl") email = "jacobross@ou.edu";
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
     if (error) {
         alert("Login failed: " + error.message);
@@ -95,30 +86,18 @@ async function uploadLogoFile(file) {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `logos/${fileName}`;
-
-    // Get current session for authenticated upload
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     const { error: uploadError } = await supabaseClient.storage
         .from('team-logos')
-        .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
-        });
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
-    if (uploadError) {
-        alert("Logo upload error: " + uploadError.message);
-        return null;
-    }
+    if (uploadError) return null;
 
-    const { data } = supabaseClient.storage
-        .from('team-logos')
-        .getPublicUrl(filePath);
-
+    const { data } = supabaseClient.storage.from('team-logos').getPublicUrl(filePath);
     return data.publicUrl;
 }
 
-// Global variable to track which team is currently being edited
 let editingTeamId = null;
 
 async function saveTeam(directData = null) {
@@ -137,10 +116,8 @@ async function saveTeam(directData = null) {
             if (uploadedUrl) logoUrl = uploadedUrl;
         }
 
-        // Determine Team ID (keep original ID if editing, otherwise generate a new slug)
         const teamId = editingTeamId || name.toLowerCase().replace(/\s+/g, '-');
 
-        // Preserve current logo if no new file uploaded during an edit
         if (!logoUrl && editingTeamId) {
             const currentTeam = teams.find(t => t.id === editingTeamId);
             logoUrl = currentTeam?.logo || 'https://via.placeholder.com/50?text=RL';
@@ -154,33 +131,26 @@ async function saveTeam(directData = null) {
     const { error } = await supabaseClient.from('teams').upsert(newTeam);
     if (error) return alert("Error saving team: " + error.message);
 
-    // Reset Form & Editing State
     editingTeamId = null;
-    document.getElementById("team-name-input").value = "";
-    document.getElementById("team-logo-file").value = "";
+    document.getElementById("addTeamForm").reset();
     const submitBtn = document.querySelector("#addTeamForm button[type='submit']");
     if (submitBtn) submitBtn.innerText = "Save Team";
 
     loadData();
 }
 
-// Populate team form for editing
 function editTeam(teamId) {
     const team = teams.find(t => t.id === teamId);
     if (!team) return;
 
     editingTeamId = team.id;
     document.getElementById("team-name-input").value = team.name;
-    
-    // Smooth scroll back up to management panel
     document.querySelector(".card").scrollIntoView({ behavior: 'smooth' });
-    
     alert(`Editing "${team.name}". Choose a new logo file to replace the logo, then click Save.`);
 }
 
-// Delete Team Function
 async function deleteTeam(teamId) {
-    if (!confirm("Are you sure you want to delete this team? Players attached to this team will remain in DB.")) return;
+    if (!confirm("Are you sure you want to delete this team?")) return;
     const { error } = await supabaseClient.from('teams').delete().eq('id', teamId);
     if (error) alert("Error deleting team: " + error.message);
     else loadData();
@@ -191,8 +161,7 @@ function populateTeamDropdowns() {
     const datalist = document.getElementById("teams-list");
     if (!datalist) return;
 
-    datalist.innerHTML = ""; // Clear existing options
-
+    datalist.innerHTML = ""; 
     teams.forEach(team => {
         const option = document.createElement("option");
         option.value = team.name; 
@@ -211,7 +180,6 @@ function getSelectedTeamId(inputElementId) {
 async function addPlayerManualSubmit(e) {
     e.preventDefault();
     const username = document.getElementById('manualUsername').value.trim();
-    const platform = document.getElementById('manualPlatformSelect').value;
     const teamId = getSelectedTeamId('manualTeamInput');
     
     const trackerUrlInput = document.getElementById('manualTrackerUrl');
@@ -220,29 +188,52 @@ async function addPlayerManualSubmit(e) {
     const alias = document.getElementById('manualAlias').value.trim();
     const notes = document.getElementById('manualNotes').value.trim();
 
-    const m1v1 = parseInt(document.getElementById('manual1v1MMR').value) || 0;
-    const m2v2 = parseInt(document.getElementById('manual2v2MMR').value) || 0;
-    const m3v3 = parseInt(document.getElementById('manual3v3MMR').value) || 0;
-    const peak = parseInt(document.getElementById('manualPeakMMR').value) || Math.max(m1v1, m2v2, m3v3);
+    // 1v1
+    const c1 = parseInt(document.getElementById('m1v1_cur').value) || 0;
+    const b1 = parseInt(document.getElementById('m1v1_best').value) || 0;
+    const s1 = parseInt(document.getElementById('m1v1_season').value) || 0;
+    
+    // 2v2
+    const c2 = parseInt(document.getElementById('m2v2_cur').value) || 0;
+    const b2 = parseInt(document.getElementById('m2v2_best').value) || 0;
+    const s2 = parseInt(document.getElementById('m2v2_season').value) || 0;
+    
+    // 3v3
+    const c3 = parseInt(document.getElementById('m3v3_cur').value) || 0;
+    const b3 = parseInt(document.getElementById('m3v3_best').value) || 0;
+    const s3 = parseInt(document.getElementById('m3v3_season').value) || 0;
 
     if (!teamId) return alert("Please select or type a valid team.");
 
-    const playerId = `${platform}-${username.toLowerCase().replace(/\s+/g, '')}`;
+    // Calculate Peak MMR & Season based on highest value inputted
+    const peak = Math.max(c1, b1, c2, b2, c3, b3);
+    let peakSeason = 0;
+    if (peak === b1) peakSeason = s1;
+    if (peak === b2) peakSeason = s2;
+    if (peak === b3) peakSeason = s3;
+
+    // Generate unique ID without platform
+    const playerId = `player-${username.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now()}`;
     const currentDate = new Date().toLocaleDateString();
 
     const playerData = {
         id: playerId,
         handle: username,
-        platform: platform,
         team_id: teamId,
         alias: alias,
         notes: notes,
         peak_rating: peak,
         peak_playlist: "Overall",
-        peak_season: 0,
-        duel_1v1_current_mmr: m1v1,
-        doubles_2v2_current_mmr: m2v2,
-        standard_3v3_current_mmr: m3v3,
+        peak_season: peakSeason,
+        duel_1v1_current_mmr: c1,
+        duel_1v1_best_mmr: b1,
+        duel_1v1_best_season: s1,
+        doubles_2v2_current_mmr: c2,
+        doubles_2v2_best_mmr: b2,
+        doubles_2v2_best_season: s2,
+        standard_3v3_current_mmr: c3,
+        standard_3v3_best_mmr: b3,
+        standard_3v3_best_season: s3,
         tracker_url: trackerUrl,
         last_updated: currentDate
     };
@@ -253,13 +244,12 @@ async function addPlayerManualSubmit(e) {
         return;
     }
 
-    // Save Rank History for trend tracking
     const historyData = {
         player_id: playerId,
         recorded_date: currentDate,
-        duel_1v1_mmr: m1v1,
-        doubles_2v2_mmr: m2v2,
-        standard_3v3_mmr: m3v3
+        duel_1v1_mmr: c1,
+        doubles_2v2_mmr: c2,
+        standard_3v3_mmr: c3
     };
     await supabaseClient.from('rank_history').insert(historyData);
 
@@ -277,7 +267,6 @@ async function removePlayer(playerId) {
 function renderAll() {
     const query = document.getElementById("search-input") ? document.getElementById("search-input").value.toLowerCase() : "";
     
-    // Populate the datalist for the team search-as-you-type input
     populateTeamDropdowns();
 
     const grid = document.getElementById("teams-grid");
@@ -313,25 +302,28 @@ function renderAll() {
             <div class="player-item">
                 <div class="player-names">
                     <span class="alias">${p.alias || ''}</span>
-                    <span class="handle">${p.handle} (${p.platform})</span>
+                    <span class="handle">${p.handle}</span>
                 </div>
                 
                 <div class="peak-badge">
-                    &#127942; <strong>Peak:</strong> ${p.peak_rating || 'N/A'} MMR ${p.peak_season ? `(S${p.peak_season})` : ''} - ${p.peak_playlist || ''}
+                    &#127942; <strong>Peak:</strong> ${p.peak_rating || 'N/A'} MMR ${p.peak_season ? `(S${p.peak_season})` : ''}
                 </div>
 
                 <div class="playlist-grid">
                     <div class="playlist-box">
                         <div class="playlist-title">1v1 Duel</div>
                         <div><strong>Cur MMR:</strong> ${p.duel_1v1_current_mmr || 0}</div>
+                        <div><strong>Best MMR:</strong> ${p.duel_1v1_best_mmr || 0} ${p.duel_1v1_best_season ? `<span style="color:#aaa;">(S${p.duel_1v1_best_season})</span>` : ''}</div>
                     </div>
                     <div class="playlist-box">
                         <div class="playlist-title">2v2 Doubles</div>
                         <div><strong>Cur MMR:</strong> ${p.doubles_2v2_current_mmr || 0}</div>
+                        <div><strong>Best MMR:</strong> ${p.doubles_2v2_best_mmr || 0} ${p.doubles_2v2_best_season ? `<span style="color:#aaa;">(S${p.doubles_2v2_best_season})</span>` : ''}</div>
                     </div>
                     <div class="playlist-box">
                         <div class="playlist-title">3v3 Standard</div>
                         <div><strong>Cur MMR:</strong> ${p.standard_3v3_current_mmr || 0} <br>${trendHtml}</div>
+                        <div><strong>Best MMR:</strong> ${p.standard_3v3_best_mmr || 0} ${p.standard_3v3_best_season ? `<span style="color:#aaa;">(S${p.standard_3v3_best_season})</span>` : ''}</div>
                     </div>
                 </div>
 
@@ -369,7 +361,6 @@ function renderAll() {
     });
 }
 
-// Expose functions globally to HTML onclick handlers
 window.toggleAuthModal = toggleAuthModal;
 window.loginAdmin = loginAdmin;
 window.logoutAdmin = logoutAdmin;

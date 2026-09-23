@@ -367,3 +367,13 @@ function renderAll() {
 document.addEventListener("DOMContentLoaded", () => {
     loadData();
 });
+
+// Expose functions globally to HTML onclick handlers
+window.toggleAuthModal = toggleAuthModal;
+window.loginAdmin = loginAdmin;
+window.logoutAdmin = logoutAdmin;
+window.saveTeam = saveTeam;
+window.addPlayerFormSubmit = addPlayerFormSubmit;
+window.refreshPlayer = refreshPlayer;
+window.refreshAllPlayers = refreshAllPlayers;
+window.removePlayer = removePlayer;

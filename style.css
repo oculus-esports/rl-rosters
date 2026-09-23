@@ -208,11 +208,34 @@ button:active {
     font-weight: 600;
 }
 
-/* Player Items */
+/* Container that holds all player columns side-by-side */
 .player-list {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Individual player column card */
+.player-column {
+    flex: 1 1 220px; /* Expands evenly side-by-side, wraps on tiny screens */
+    min-width: 200px;
+    max-width: 320px;
+    background: #1e1e24;
+    border: 1px solid #2d2d33;
+    border-radius: 8px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+}
+
+/* Stacks 1v1, 2v2, and 3v3 top-to-bottom inside the column */
+.player-ranks-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .player-item {

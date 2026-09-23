@@ -365,8 +365,8 @@ function renderAll() {
 
     // Always Pin OU / Oklahoma to the top of the team array
     const sortedTeams = [...teams].sort((a, b) => {
-        const isAOU = a.id === 'ou' || a.name.toLowerCase().includes('oklahoma');
-        const isBOU = b.id === 'ou' || b.name.toLowerCase().includes('oklahoma');
+        const isAOU = a.id === 'ou' || a.name.toLowerCase() === 'university of oklahoma';
+        const isBOU = b.id === 'ou' || b.name.toLowerCase() === 'university of oklahoma';
         if (isAOU) return -1;
         if (isBOU) return 1;
         return a.name.localeCompare(b.name);
@@ -381,7 +381,7 @@ function renderAll() {
         const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
         const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
 
-        const isOU = team.id === 'ou' || team.name.toLowerCase().includes('oklahoma');
+        const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 
         const card = document.createElement("div");
         card.className = "team-card";

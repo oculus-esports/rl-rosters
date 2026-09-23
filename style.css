@@ -1,205 +1,31 @@
-:root {
-    --bg-dark: #121212;
-    --card-bg: #1e1e1e;
-    --border-color: #2a2a2a;
-    --accent-crimson: #841617; /* OU Crimson */
-    --accent-gold: #ffb700;
-    --text-main: #ffffff;
-    --text-muted: #aaaaaa;
-    --win-green: #2e7d32;
-    --loss-red: #c62828;
-}
-
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 20px;
-}
-
-.container {
-    max-width: 1280px;
-    margin: auto;
-}
-
-header {
-    border-bottom: 2px solid var(--accent-crimson);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
-
-.header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-h1, h2, h3 {
-    margin-top: 0;
-}
-
-.admin-auth {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 25px;
-}
-
-/* Forms */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
-}
-
-.form-box {
-    background-color: #252525;
-    padding: 15px;
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-input, select, button {
-    padding: 10px;
+.peak-badge {
+    background-color: #3a2b00;
+    color: #ffcc00;
+    padding: 6px 10px;
     border-radius: 4px;
-    border: 1px solid var(--border-color);
-    background-color: #121212;
-    color: white;
+    font-size: 0.85em;
+    margin: 8px 0;
 }
 
-button {
-    background-color: var(--accent-crimson);
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #a01c1e;
-}
-
-/* Teams Grid */
-#teams-grid {
+.playlist-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.team-card {
-    background-color: var(--card-bg);
-    border-top: 4px solid var(--accent-crimson);
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.team-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.team-logo {
-    width: 50px;
-    height: 50px;
-    object-fit: contain;
+.playlist-box {
+    background-color: #1a1a1a;
+    padding: 6px 8px;
     border-radius: 4px;
-    background-color: #121212;
+    font-size: 0.78em;
+    border: 1px solid #333;
 }
 
-.team-info h3 {
-    margin: 0;
-}
-
-.avg-mmr {
-    font-size: 0.9em;
-    color: var(--accent-gold);
-    font-weight: bold;
-}
-
-/* Player Cards within Teams */
-.player-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.player-item {
-    background-color: #252525;
-    padding: 10px;
-    border-radius: 5px;
-    position: relative;
-}
-
-.player-names {
-    display: flex;
-    justify-content: space-between;
-}
-
-.alias {
+.playlist-title {
     font-weight: bold;
     color: #4da6ff;
-}
-
-.handle {
-    color: var(--text-muted);
-    font-size: 0.85em;
-}
-
-.player-stats {
-    margin-top: 5px;
-    font-size: 0.9em;
-}
-
-.notes {
-    font-size: 0.8em;
-    color: var(--text-muted);
-    font-style: italic;
-    margin-top: 4px;
-}
-
-/* Match Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.result-win {
-    color: #4caf50;
-    font-weight: bold;
-}
-
-.result-loss {
-    color: #f44336;
-    font-weight: bold;
-}
-
-.remove-btn {
-    background-color: #ff3333;
-    padding: 4px 8px;
-    font-size: 0.8em;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
 }

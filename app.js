@@ -376,6 +376,73 @@ function renderAll() {
     });
 }
 
+// Tab Switching Helper
+function switchPlayerTab(tab) {
+    const autoForm = document.getElementById('addPlayerForm');
+    const manualForm = document.getElementById('addPlayerManualForm');
+    const autoBtn = document.getElementById('tabAutoBtn');
+    const manualBtn = document.getElementById('tabManualBtn');
+
+    if (tab === 'auto') {
+        autoForm.style.display = 'flex';
+        manualForm.style.display = 'none';
+        autoBtn.classList.add('active');
+        manualBtn.classList.remove('active');
+    } else {
+        autoForm.style.display = 'none';
+        manualForm.style.display = 'flex';
+        manualBtn.classList.add('active');
+        autoBtn.classList.remove('active');
+    }
+}
+
+// Manual Form Submit Handler
+async function addPlayerManualSubmit(e) {
+    e.preventDefault();
+    const username = document.getElementById('manualUsername').value.trim();
+    const platform = document.getElementById('manualPlatformSelect').value;
+    const teamId = document.getElementById('manualTeamSelect').value;
+    const alias = document.getElementById('manualAlias').value.trim();
+    const notes = document.getElementById('manualNotes').value.trim();
+
+    const m1v1 = parseInt(document.getElementById('manual1v1MMR').value) || 0;
+    const m2v2 = parseInt(document.getElementById('manual2v2MMR').value) || 0;
+    const m3v3 = parseInt(document.getElementById('manual3v3MMR').value) || 0;
+    const peak = parseInt(document.getElementById('manualPeakMMR').value) || Math.max(m1v1, m2v2, m3v3);
+
+    const playerId = `${platform}-${username.toLowerCase().replace(/\s+/g, '')}`;
+    const currentDate = new Date().toLocaleDateString();
+
+    const playerData = {
+        id: playerId,
+        handle: username,
+        platform: platform,
+        team_id: teamId,
+        alias: alias,
+        notes: notes,
+        peak_rating: peak,
+        peak_playlist: "Overall",
+        peak_season: 0,
+        duel_1v1_current_mmr: m1v1,
+        doubles_2v2_current_mmr: m2v2,
+        standard_3v3_current_mmr: m3v3,
+        last_updated: currentDate
+    };
+
+    const { error } = await supabaseClient.from('players').upsert(playerData);
+    if (error) {
+        alert("Error saving player: " + error.message);
+    } else {
+        alert(`Player ${username} added successfully!`);
+        document.getElementById('addPlayerManualForm').reset();
+        if (typeof loadAllData === 'function') {
+            loadAllData();
+        } else {
+            location.reload();
+        }
+    }
+}
+
 // Expose functions globally to HTML onclick handlers
 window.toggleAuthModal = toggleAuthModal;
 window.loginAdmin = loginAdmin;

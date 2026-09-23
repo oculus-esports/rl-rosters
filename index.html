@@ -15,7 +15,7 @@
                 <h1>OU Esports - RL Scouting Database</h1>
                 <div class="admin-auth">
                     <span id="admin-status">Mode: Public Viewer</span>
-                    <button id="auth-btn" onclick="toggleAdminLogin()">Admin Login</button>
+                    <button id="auth-btn" onclick="toggleAuthModal()">Admin Login</button>
                 </div>
             </div>
 
@@ -24,6 +24,17 @@
                 <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()">
             </div>
         </header>
+
+        <!-- Login Modal / Form -->
+        <div id="login-modal" class="card hidden">
+            <h3>Admin Login</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+                <input type="text" id="admin-email" placeholder="Username / Email">
+                <input type="password" id="admin-password" placeholder="Password">
+                <button onclick="loginAdmin()">Sign In</button>
+                <button onclick="toggleAuthModal()" style="background-color: #555;">Cancel</button>
+            </div>
+        </div>
 
         <!-- Admin Controls Panel -->
         <section id="admin-panel" class="card admin-only hidden">
@@ -37,7 +48,8 @@
                 <div class="form-box">
                     <h3>Add / Edit Team</h3>
                     <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)">
-                    <input type="text" id="team-logo-input" placeholder="Logo Image URL (ImgBB / Direct Link)">
+                    <label style="font-size: 0.85rem; color: #9ba3b4; margin-top: 5px;">Upload Team Logo:</label>
+                    <input type="file" id="team-logo-file" accept="image/*">
                     <button onclick="saveTeam()">Save Team</button>
                 </div>
 

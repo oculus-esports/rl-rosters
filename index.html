@@ -64,18 +64,18 @@
                   </div>
                 
                   <!-- AUTO FETCH FORM -->
-                  <form id="addPlayerForm" onsubmit="addPlayerFormSubmit(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                    <input type="url" id="playerTrackerUrl" placeholder="https://rocketleague.tracker.network/rocket-league/profile/steam/..." required />
-                    <select id="playerTeamSelect" required>
+                  <form id="addPlayerForm" onsubmit="event.preventDefault(); addPlayerFormSubmit();" style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="url" id="player-url-input" placeholder="https://rocketleague.tracker.network/rocket-league/profile/steam/..." required />
+                    <select id="player-team-select" required>
                       <option value="">Select Team...</option>
                     </select>
-                    <input type="text" id="playerAlias" placeholder="Tournament Alias (Optional)" />
-                    <input type="text" id="playerNotes" placeholder="Scouting Notes (Optional)" />
+                    <input type="text" id="player-alias-input" placeholder="Tournament Alias (Optional)" />
+                    <input type="text" id="player-notes-input" placeholder="Scouting Notes (Optional)" />
                     <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Fetch & Add Player</button>
                   </form>
                 
                   <!-- MANUAL ENTRY FORM -->
-                  <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event)" style="display: none; flex-direction: column; gap: 10px;">
+                  <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event);" style="display: none; flex-direction: column; gap: 10px;">
                     <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required />
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">

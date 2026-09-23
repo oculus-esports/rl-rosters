@@ -1,0 +1,45 @@
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+header, .filters {
+    margin-bottom: 20px;
+    text-align: center;
+}
+input[type="text"] {
+    width: 60%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    margin-right: 10px;
+}
+button {
+    padding: 10px 20px;
+    background-color: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+button:hover { background-color: #005bb5; }
+#roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+.player-card {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 5px solid #0078ff;
+}
+.player-card h3 { margin-top: 0; }
+.rank { font-weight: bold; color: #ffb700; }

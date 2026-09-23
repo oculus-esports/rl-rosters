@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OU Esports - Collegiate RL Roster & Scouting DB</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
         <!-- Top Navigation & Auth -->
         <header>
             <div class="header-top">
-                <h1>OU Esports - RL Scouting & Match DB</h1>
+                <h1>OU Esports - RL Scouting Database</h1>
                 <div class="admin-auth">
                     <span id="admin-status">Mode: Public Viewer</span>
                     <button id="auth-btn" onclick="toggleAdminLogin()">Admin Login</button>
@@ -24,9 +25,12 @@
             </div>
         </header>
 
-        <!-- Admin Controls Panel (Hidden by default unless Admin) -->
+        <!-- Admin Controls Panel -->
         <section id="admin-panel" class="card admin-only hidden">
-            <h2>Admin Management Panel</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Admin Management Panel</h2>
+                <button onclick="refreshAllPlayers()" style="background-color: #ff9800; color: black;">🔄 Refresh All Rosters</button>
+            </div>
             
             <div class="form-grid">
                 <!-- Add Team Form -->
@@ -44,26 +48,7 @@
                     <select id="player-team-select"></select>
                     <input type="text" id="player-alias-input" placeholder="Tournament Alias (Optional)">
                     <input type="text" id="player-notes-input" placeholder="Scouting Notes (Optional)">
-                    <button onclick="addPlayer()">Fetch & Add Player</button>
-                </div>
-
-                <!-- Log Match Form -->
-                <div class="form-box">
-                    <h3>Log OU Match / Scrim Result</h3>
-                    <select id="match-opponent-select"></select>
-                    <select id="match-type">
-                        <option value="Scrim">Scrim</option>
-                        <option value="NECC">NECC Match</option>
-                        <option value="CRL Qualifier">CRL Qualifier</option>
-                        <option value="Tournament">Other Tournament</option>
-                    </select>
-                    <select id="match-result">
-                        <option value="Win">Win</option>
-                        <option value="Loss">Loss</option>
-                    </select>
-                    <input type="text" id="match-score" placeholder="Score (e.g. 3-1)">
-                    <input type="text" id="match-notes" placeholder="Match notes/recap">
-                    <button onclick="logMatch()">Log Match Result</button>
+                    <button onclick="addPlayerFormSubmit()">Fetch & Add Player</button>
                 </div>
             </div>
         </section>
@@ -73,29 +58,8 @@
             <h2>Collegiate Teams & Rosters</h2>
             <div id="teams-grid"></div>
         </section>
-
-        <!-- Match History & OU Progress Section -->
-        <section id="matches-section" class="card">
-            <h2>OU Match & Scrim Progress Log</h2>
-            <div id="match-stats-summary"></div>
-            <table id="matches-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Opponent</th>
-                        <th>Event Type</th>
-                        <th>Result</th>
-                        <th>Score</th>
-                        <th>Notes</th>
-                        <th class="admin-only hidden">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="matches-tbody"></tbody>
-            </table>
-        </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
 </html>

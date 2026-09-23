@@ -158,6 +158,14 @@ function extractPlaylistStats(segments, playlistName) {
 async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes, playerIdOverride = null) {
     try {
         const res = await fetch(`${PROXY_URL}?platform=${platform}&username=${username}`);
+        
+        // 1. Check if the response was successful
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Worker returned status ${res.status}. Check Worker logs or API key.`);
+        }
+
+        // 2. Safely parse JSON
         const data = await res.json();
         if (data.errors) throw new Error(data.errors[0].message);
 
@@ -213,7 +221,7 @@ async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes,
 
         return true;
     } catch (e) {
-        console.error(e);
+        console.error("Player Fetch Error:", e);
         alert(`Failed to fetch stats for ${username}: ${e.message}`);
         return false;
     }

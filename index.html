@@ -38,75 +38,79 @@
 
         <!-- Admin Controls Panel -->
         <section id="admin-panel" class="card admin-only hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2>Admin Management Panel</h2>
                 <button onclick="refreshAllPlayers()" style="background-color: #ff9800; color: black;">&#128257; Refresh All Rosters</button>
             </div>
             
             <div class="form-grid">
-                <!-- Add Team Form -->
+                <!-- Add / Edit Team Form -->
                 <div class="form-box">
                     <h3>Add / Edit Team</h3>
-                    <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)">
-                    <label style="font-size: 0.85rem; color: #9ba3b4; margin-top: 5px;">Upload Team Logo:</label>
-                    <input type="file" id="team-logo-file" accept="image/*">
-                    <button onclick="saveTeam()">Save Team</button>
+                    <form id="addTeamForm" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required>
+                        <label style="font-size: 0.85rem; color: #9ba3b4;">Upload Team Logo:</label>
+                        <input type="file" id="team-logo-file" accept="image/*">
+                        <button type="submit" class="btn btn-primary">Save Team</button>
+                    </form>
                 </div>
 
                 <!-- Add Player Card -->
-                <div class="card">
-                  <h3>Add Player to Roster</h3>
+                <div class="form-box">
+                    <h3>Add Player to Roster</h3>
                 
-                  <!-- Mode Toggle Tabs -->
-                  <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button type="button" id="tabAutoBtn" class="btn active" style="flex: 1;" onclick="switchPlayerTab('auto')">Auto (Tracker Link)</button>
-                    <button type="button" id="tabManualBtn" class="btn" style="flex: 1;" onclick="switchPlayerTab('manual')">Manual Entry</button>
-                  </div>
-                
-                  <!-- AUTO FETCH FORM -->
-                  <form id="addPlayerForm" onsubmit="event.preventDefault(); addPlayerFormSubmit();" style="display: flex; flex-direction: column; gap: 10px;">
-                    <input type="url" id="player-url-input" placeholder="https://rocketleague.tracker.network/rocket-league/profile/steam/..." required />
-                    <select id="player-team-select" required>
-                      <option value="">Select Team...</option>
-                    </select>
-                    <input type="text" id="player-alias-input" placeholder="Tournament Alias (Optional)" />
-                    <input type="text" id="player-notes-input" placeholder="Scouting Notes (Optional)" />
-                    <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Fetch & Add Player</button>
-                  </form>
-                
-                  <!-- MANUAL ENTRY FORM -->
-                  <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event);" style="display: none; flex-direction: column; gap: 10px;">
-                    <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required />
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                      <select id="manualPlatformSelect" required>
-                        <option value="epic">Epic Games</option>
-                        <option value="steam">Steam</option>
-                        <option value="xbl">Xbox</option>
-                        <option value="psn">PlayStation</option>
-                      </select>
-                      <select id="manualTeamSelect" required>
-                        <option value="">Select Team...</option>
-                      </select>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                      <input type="number" id="manual1v1MMR" placeholder="1v1 MMR" />
-                      <input type="number" id="manual2v2MMR" placeholder="2v2 MMR" />
-                      <input type="number" id="manual3v3MMR" placeholder="3v3 MMR" />
-                      <input type="number" id="manualPeakMMR" placeholder="Peak MMR" />
+                    <!-- Mode Toggle Tabs -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button type="button" id="tabAutoBtn" class="btn active" style="flex: 1;" onclick="switchPlayerTab('auto')">Auto (Tracker Link)</button>
+                        <button type="button" id="tabManualBtn" class="btn" style="flex: 1;" onclick="switchPlayerTab('manual')">Manual Entry</button>
                     </div>
                 
-                    <input type="text" id="manualAlias" placeholder="Tournament Alias (Optional)" />
-                    <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" />
-                    <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Save Player Manually</button>
-                  </form>
+                    <!-- AUTO FETCH FORM -->
+                    <form id="addPlayerForm" onsubmit="event.preventDefault(); addPlayerFormSubmit();" style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="url" id="player-url-input" placeholder="https://rocketleague.tracker.network/rocket-league/profile/steam/..." required />
+                        <select id="player-team-select" required>
+                            <option value="">Select Team...</option>
+                        </select>
+                        <input type="text" id="player-alias-input" placeholder="Tournament Alias (Optional)" />
+                        <input type="text" id="player-notes-input" placeholder="Scouting Notes (Optional)" />
+                        <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Fetch & Add Player</button>
+                    </form>
+                
+                    <!-- MANUAL ENTRY FORM -->
+                    <form id="addPlayerManualForm" onsubmit="addPlayerManualSubmit(event);" style="display: none; flex-direction: column; gap: 10px;">
+                        <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required />
+                    
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="manualPlatformSelect" required>
+                                <option value="epic">Epic Games</option>
+                                <option value="steam">Steam</option>
+                                <option value="xbl">Xbox</option>
+                                <option value="psn">PlayStation</option>
+                            </select>
+                            <select id="manualTeamSelect" required>
+                                <option value="">Select Team...</option>
+                            </select>
+                        </div>
+                    
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="number" id="manual1v1MMR" placeholder="1v1 MMR" />
+                            <input type="number" id="manual2v2MMR" placeholder="2v2 MMR" />
+                            <input type="number" id="manual3v3MMR" placeholder="3v3 MMR" />
+                            <input type="number" id="manualPeakMMR" placeholder="Peak MMR" />
+                        </div>
+                
+                        <input type="text" id="manualAlias" placeholder="Tournament Alias (Optional)" />
+                        <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" />
+                        <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Save Player Manually</button>
+                    </form>
                 </div>
+            </div>
+        </section>
 
-        <!-- Main Display: Rosters -->
-        <section id="rosters-container">
+        <!-- Main Display: Rosters (Outside Admin Panel) -->
+        <section id="rosters-container" style="margin-top: 30px;">
             <h2>Collegiate Teams & Rosters</h2>
-            <div id="teams-grid"></div>
+            <div id="teams-grid" class="teams-grid"></div>
         </section>
     </div>
 

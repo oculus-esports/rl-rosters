@@ -210,18 +210,15 @@ button:active {
 
 /* Container holding player columns side-by-side */
 .player-list {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* Forces exactly 2 equal columns */
     gap: 15px;
     width: 100%;
 }
 
 /* Individual player vertical column */
 .player-column {
-    flex: 1 1 240px;
-    min-width: 220px;
-    max-width: 320px;
+    width: 100%;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -249,4 +246,11 @@ button:active {
 
 .remove-btn {
     background-color: #f44336;
+}
+
+/* Mobile responsiveness: collapse to 1 column on smaller screens */
+@media (max-width: 640px) {
+    .player-list {
+        grid-template-columns: 1fr !important;
+    }
 }

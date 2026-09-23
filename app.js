@@ -71,7 +71,7 @@ async function loginAdmin() {
 
     // Default username fallback to email format if user entered "ourl"
     if (email.toLowerCase() === "ourl") {
-        email = "ourl@esports.com";
+        email = "jacobross@ou.edu";
     }
 
     const { error } = await supabaseClient.auth.signInWithPassword({

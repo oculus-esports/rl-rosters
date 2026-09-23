@@ -160,8 +160,7 @@ async function fetchAndSavePlayerStats(platform, username, teamId, alias, notes,
         // Direct target URL on Tracker Network's public web route
         const targetUrl = `https://api.tracker.gg/api/v2/rocket-league/standard/profile/${platform}/${encodeURIComponent(username)}`;
         
-        // Wrap with corsproxy.io to bypass browser CORS checks
-        const res = await fetch(`${PROXY_URL}${encodeURIComponent(targetUrl)}`, {
+        const res = await fetch(targetUrl, {
             headers: {
                 'Accept': 'application/json'
             }

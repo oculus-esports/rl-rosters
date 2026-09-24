@@ -423,3 +423,39 @@ body {
 /* Custom Scrollbar for Match History */
 #match-history-list::-webkit-scrollbar { width: 6px; }
 #match-history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Recent Matches Horizontal Scroller */
+.recent-scroll {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recent-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.recent-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.recent-card {
+  min-width: 260px;
+  background: rgba(34, 38, 52, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.recent-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}

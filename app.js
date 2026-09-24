@@ -418,14 +418,29 @@ function renderAll() {
     const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
     const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 
-    // Calculate Match W/L
+    // Calculate Match W/L separated by Official vs Scrim
     const teamMatches = matchLogs.filter(m => m.team_id === team.id);
-    const wins = teamMatches.filter(m => m.result === 'W').length;
-    const losses = teamMatches.filter(m => m.result === 'L').length;
+    const officialMatches = teamMatches.filter(m => m.type === 'Official');
+    const scrimMatches = teamMatches.filter(m => m.type === 'Scrim');
+
+    const offWins = officialMatches.filter(m => m.result === 'W').length;
+    const offLosses = officialMatches.filter(m => m.result === 'L').length;
+    
+    // Total up individual game wins/losses for Scrims
+    let scrimOuGames = 0;
+    let scrimOppGames = 0;
+    scrimMatches.forEach(m => {
+        scrimOuGames += (m.ou_wins || 0);
+        scrimOppGames += (m.opp_wins || 0);
+    });
+
     let wlText = "";
-    if (wins > 0 || losses > 0) {
-      const color = wins >= losses ? '#4caf50' : '#f44336'; // Green if positive/even, Red if negative
-      wlText = `<span class="admin-only ${isAdmin ? '' : 'hidden'}" style="color: ${color}; font-size: 0.75em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 12px; vertical-align: middle;">${wins}W - ${losses}L</span>`;
+    if (offWins > 0 || offLosses > 0 || scrimOuGames > 0 || scrimOppGames > 0) {
+      const offStr = (offWins > 0 || offLosses > 0) ? `<span style="color: ${offWins >= offLosses ? 'var(--accent-green)' : 'var(--accent-red)'}">Official: ${offWins}W - ${offLosses}L</span>` : '';
+      const scrimStr = (scrimOuGames > 0 || scrimOppGames > 0) ? `<span style="color: var(--text-muted)">Scrim Gs: ${scrimOuGames}W - ${scrimOppGames}L</span>` : '';
+      const divider = (offStr && scrimStr) ? ' | ' : '';
+      
+      wlText = `<span class="admin-only ${isAdmin ? '' : 'hidden'}" style="font-size: 0.70em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 12px; vertical-align: middle; white-space: nowrap;">${offStr}${divider}${scrimStr}</span>`;
     }
       
     const card = document.createElement("div");
@@ -542,11 +557,11 @@ function resetMatchForm() {
   document.getElementById('addMatchForm').reset();
   document.getElementById('match-log-id').value = '';
   document.getElementById('match-date').valueAsDate = new Date();
+  document.getElementById('match-type').value = 'Official'; // Default to Official
   document.getElementById('match-form-title').innerText = '⚔️ Log New Match';
   document.getElementById('match-submit-btn').innerText = 'Save Match Log';
   document.getElementById('match-cancel-btn').classList.add('hidden');
   
-  // Reset Game Details
   document.getElementById('game-details-container').classList.add('hidden');
   document.getElementById('game-inputs-list').innerHTML = '';
 }
@@ -599,6 +614,13 @@ function openMatchModal(teamId) {
   document.getElementById('match-team-id').value = teamId;
   resetMatchForm(); 
 
+  // Dynamically populate League Auto-fill options
+  const uniqueLeagues = [...new Set(matchLogs.map(m => m.league).filter(l => l && l.trim() !== ''))];
+  const datalist = document.getElementById('league-list');
+  if (datalist) {
+      datalist.innerHTML = uniqueLeagues.map(l => `<option value="${l}">`).join('');
+  }
+
   const list = document.getElementById('match-history-list');
   const teamMatches = matchLogs.filter(m => m.team_id === teamId).sort((a,b) => new Date(b.date) - new Date(a.date));
   
@@ -606,7 +628,6 @@ function openMatchModal(teamId) {
       list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9em; text-align:center;">No matches logged yet.</p>';
   } else {
       list.innerHTML = teamMatches.map(m => {
-          // Build Individual Game Pills if JSON data exists
           let gamesHtml = '';
           if (m.game_details && m.game_details.length > 0) {
               gamesHtml = `<div style="display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap;">` + 
@@ -636,14 +657,13 @@ function openMatchModal(teamId) {
 }
 
 function editMatchLog(matchId) {
-  const match = matchLogs.find(m => m.id === matchId);
+  const match = matchLogs.find(m => String(m.id) === String(matchId));
   if (!match) return;
   
   document.getElementById('match-log-id').value = match.id;
   document.getElementById('match-date').value = match.date;
   document.getElementById('match-type').value = match.type;
   document.getElementById('match-league').value = match.league || '';
-  document.getElementById('match-result').value = match.result;
   document.getElementById('match-ou-wins').value = match.ou_wins || 0;
   document.getElementById('match-opp-wins').value = match.opp_wins || 0;
   
@@ -651,7 +671,6 @@ function editMatchLog(matchId) {
   document.getElementById('match-submit-btn').innerText = 'Update Match';
   document.getElementById('match-cancel-btn').classList.remove('hidden');
 
-  // Load JSON game details if they exist
   document.getElementById('game-inputs-list').innerHTML = '';
   if (match.game_details && match.game_details.length > 0) {
       document.getElementById('game-details-container').classList.remove('hidden');
@@ -666,7 +685,6 @@ async function saveMatchLog(e) {
   const teamId = document.getElementById('match-team-id').value;
   const matchLogId = document.getElementById('match-log-id').value; 
   
-  // Gather JSON Game Details
   let gameDetails = null;
   const container = document.getElementById('game-details-container');
   if (!container.classList.contains('hidden')) {
@@ -683,14 +701,21 @@ async function saveMatchLog(e) {
       }
   }
 
+  // Auto-Calculate W/L
+  const ouWins = parseInt(document.getElementById('match-ou-wins').value) || 0;
+  const oppWins = parseInt(document.getElementById('match-opp-wins').value) || 0;
+  let calculatedResult = 'T'; // Tie fallback just in case
+  if (ouWins > oppWins) calculatedResult = 'W';
+  if (ouWins < oppWins) calculatedResult = 'L';
+
   const matchData = {
       team_id: teamId,
       date: document.getElementById('match-date').value,
       type: document.getElementById('match-type').value,
       league: document.getElementById('match-league').value,
-      result: document.getElementById('match-result').value,
-      ou_wins: parseInt(document.getElementById('match-ou-wins').value) || 0,
-      opp_wins: parseInt(document.getElementById('match-opp-wins').value) || 0,
+      result: calculatedResult,
+      ou_wins: ouWins,
+      opp_wins: oppWins,
       game_details: gameDetails
   };
 

@@ -485,9 +485,9 @@ function generatePlayerRowHTML(p) {
 // ---------------------------------------------
 
 function getRLRankIcon(mmr, mode = '3v3') {
-  const baseUrl = 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s15rank';
+  const baseUrl = 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/';
   
-  if (!mmr || mmr <= 0) return baseUrl + '0.png'; // Unranked Fallback
+  if (!mmr || mmr <= 0) return baseUrl + 's4-0.png'; // Unranked Fallback
 
   let ssl, gc3, gc2, gc1, c3, c2, c1, d1, p1, g1, s1;
 
@@ -504,24 +504,24 @@ function getRLRankIcon(mmr, mode = '3v3') {
   }
 
   // Supersonic Legend & Grand Champion
-  if (mmr >= ssl) return baseUrl + '22.png';
-  if (mmr >= gc3) return baseUrl + '21.png';
-  if (mmr >= gc2) return baseUrl + '20.png';
-  if (mmr >= gc1) return baseUrl + '19.png';
+  if (mmr >= ssl) return baseUrl + 's15rank22.png';
+  if (mmr >= gc3) return baseUrl + 's15rank21.png';
+  if (mmr >= gc2) return baseUrl + 's15rank20.png';
+  if (mmr >= gc1) return baseUrl + 's15rank19.png';
   
   // Champion
-  if (mmr >= c3) return baseUrl + '18.png';
-  if (mmr >= c2) return baseUrl + '17.png';
-  if (mmr >= c1) return baseUrl + '16.png';
+  if (mmr >= c3) return baseUrl + 's4-18.png';
+  if (mmr >= c2) return baseUrl + 's4-17.png';
+  if (mmr >= c1) return baseUrl + 's4-16.png';
   
   // Diamond 1, Plat 1, Gold 1, Silver 1, Bronze 1
-  if (mmr >= d1) return baseUrl + '13.png';
-  if (mmr >= p1) return baseUrl + '10.png';
-  if (mmr >= g1) return baseUrl + '7.png';
-  if (mmr >= s1) return baseUrl + '4.png';
+  if (mmr >= d1) return baseUrl + 's4-15.png';
+  if (mmr >= p1) return baseUrl + 's4-12.png';
+  if (mmr >= g1) return baseUrl + 's4-9.png';
+  if (mmr >= s1) return baseUrl + 's4-6.png';
   
   // Bronze Fallback (If they have MMR but it's lower than Silver 1)
-  return baseUrl + '1.png'; 
+  return baseUrl + 's4-3.png'; 
 }
 
 function copyTeamStats(teamId) {

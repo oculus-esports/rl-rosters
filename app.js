@@ -450,6 +450,7 @@ function renderAll() {
       
     const card = document.createElement("div");
     card.className = "team-section";
+    card.id = `team-section-${team.id}`;
     if (isOU) card.style.border = "1px solid #841617";
 
     card.innerHTML = `
@@ -561,7 +562,7 @@ function renderRecentMatches() {
               <img src="${oppLogo}" style="width: 42px; height: 42px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 4px;">
               <div style="flex: 1; overflow: hidden;">
                   <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${m.date} • ${m.type}</div>
-                  <div style="font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${oppName}">vs ${oppName}</div>
+                  <div onclick="const t = document.getElementById('team-section-${m.team_id}'); if(t) t.scrollIntoView({behavior: 'smooth', block: 'center'});" style="font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px;" title="Jump to ${oppName} roster">vs ${oppName}</div>
               </div>
               <div style="text-align: right; line-height: 1.1;">
                   <div style="font-weight: 900; font-size: 1.2rem; color: ${resultColor};">${m.result}</div>

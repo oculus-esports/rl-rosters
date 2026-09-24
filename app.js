@@ -399,6 +399,19 @@ function renderAll() {
   });
 
   sortedTeams.forEach(team => {
+    let teamPlayers = filteredPlayers.filter(p => p.team_id === team.id);
+    
+    if (query && teamPlayers.length === 0 && !team.name.toLowerCase().includes(query)) return;
+
+    // SORT PLAYERS: Highest current rank tier first, fallback to peak rating
+    teamPlayers.sort((a, b) => {
+      const tierA = getPlayerHighestCurrentTier(a);
+      const tierB = getPlayerHighestCurrentTier(b);
+      if (tierA !== tierB) return tierB - tierA; 
+      return (b.peak_rating || 0) - (a.peak_rating || 0); 
+    });
+
+    const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
     const teamPlayers = filteredPlayers.filter(p => p.team_id === team.id);
     if (query && teamPlayers.length === 0 && !team.name.toLowerCase().includes(query)) return;
 
@@ -436,12 +449,13 @@ function renderAll() {
 
 function generatePlayerRowHTML(p) {
   const displayAlias = p.alias ? p.alias : p.handle;
-  const rankIcon = getRLRankIcon(p.peak_rating);
+  const currentRankIcon = getPlayerHighestCurrentIcon(p);
+  const peakIcon = getRLRankIcon(p.peak_rating, '3v3'); // Default to standard mode for peak mapping
   
   return `
     <div class="player-row" onclick="openPlayerModal('${p.id}')">
       <div class="player-identity">
-        <img src="${rankIcon}" class="rank-icon" title="Peak Rank">
+        <img src="${currentRankIcon}" class="rank-icon" title="Highest Current Rank">
         <div class="player-name-block">
           <span class="player-alias">${displayAlias}</span>
           <span class="player-handle">${p.handle}</span>
@@ -449,7 +463,10 @@ function generatePlayerRowHTML(p) {
       </div>
       <div class="stat-block">
         <span class="stat-label">Peak</span>
-        <span class="stat-value stat-peak">${p.peak_rating || 'N/A'}</span>
+        <span class="stat-value stat-peak">
+          <img src="${peakIcon}" class="micro-icon">
+          ${p.peak_rating || 'N/A'}
+        </span>
       </div>
       <div class="stat-block">
         <span class="stat-label">3v3</span>
@@ -483,6 +500,56 @@ function generatePlayerRowHTML(p) {
 // ---------------------------------------------
 // HELPERS (Rank Icons, Copy, Modals)
 // ---------------------------------------------
+
+// Evaluates MMR against the gamemode to return a standardized rank tier (0-22)
+function getRankTier(mmr, mode = '3v3') {
+  if (!mmr || mmr <= 0) return 0;
+  let ssl, gc3, gc2, gc1, c3, c2, c1, d1, p1, g1, s1;
+
+  if (mode === '1v1') {
+    ssl = 1355; gc3 = 1296; gc2 = 1236; gc1 = 1176; c3 = 1115; c2 = 1055; c1 = 995;
+    d1 = 815; p1 = 635; g1 = 440; s1 = 275;
+  } else if (mode === '2v2') {
+    ssl = 1875; gc3 = 1707; gc2 = 1576; gc1 = 1435; c3 = 1315; c2 = 1196; c1 = 1075;
+    d1 = 835; p1 = 655; g1 = 475; s1 = 296;
+  } else {
+    ssl = 1860; gc3 = 1715; gc2 = 1576; gc1 = 1436; c3 = 1315; c2 = 1195; c1 = 1076;
+    d1 = 835; p1 = 655; g1 = 475; s1 = 296;
+  }
+
+  if (mmr >= ssl) return 22;
+  if (mmr >= gc3) return 21;
+  if (mmr >= gc2) return 20;
+  if (mmr >= gc1) return 19;
+  if (mmr >= c3) return 18;
+  if (mmr >= c2) return 17;
+  if (mmr >= c1) return 16;
+  if (mmr >= d1) return 13;
+  if (mmr >= p1) return 10;
+  if (mmr >= g1) return 7;
+  if (mmr >= s1) return 4;
+  return 1; // Bronze
+}
+
+// Gets the highest numerical tier across all 3 modes for sorting
+function getPlayerHighestCurrentTier(p) {
+  return Math.max(
+    getRankTier(p.duel_1v1_current_mmr, '1v1'),
+    getRankTier(p.doubles_2v2_current_mmr, '2v2'),
+    getRankTier(p.standard_3v3_current_mmr, '3v3')
+  );
+}
+
+// Finds which mode has the highest tier and returns its associated icon
+function getPlayerHighestCurrentIcon(p) {
+  const modes = [
+    { tier: getRankTier(p.duel_1v1_current_mmr, '1v1'), icon: getRLRankIcon(p.duel_1v1_current_mmr, '1v1') },
+    { tier: getRankTier(p.doubles_2v2_current_mmr, '2v2'), icon: getRLRankIcon(p.doubles_2v2_current_mmr, '2v2') },
+    { tier: getRankTier(p.standard_3v3_current_mmr, '3v3'), icon: getRLRankIcon(p.standard_3v3_current_mmr, '3v3') }
+  ];
+  // Reduce to the mode object with the highest tier
+  return modes.reduce((max, current) => current.tier > max.tier ? current : max).icon;
+}
 
 function getRLRankIcon(mmr, mode = '3v3') {
   const baseUrl = 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/';

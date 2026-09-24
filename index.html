@@ -15,7 +15,7 @@
             <h1>OU Esports - RL Scouting Database</h1>
             <div class="admin-auth">
               <span id="admin-status">Mode: Public Viewer</span>
-              <button id="auth-btn" onclick="toggleAuthModal()">Admin Login</button>
+              <button id="auth-btn" onclick="toggleAuthModal()">Team Login</button>
             </div>
           </div>
           <div class="filters">
@@ -123,6 +123,40 @@
       </div>
     </div>
 
+    <!-- Match History Modal -->
+    <div id="match-modal" class="modal-overlay hidden" onclick="closeMatchModal(event)">
+      <div class="modal-content card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="match-modal-title">Match History</h2>
+          <button onclick="closeMatchModal(event)" class="close-btn">&times;</button>
+        </div>
+        
+        <div id="match-history-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+          <!-- Match items injected via JS -->
+        </div>
+    
+        <div style="border-top: 1px solid var(--border-color); padding-top: 15px;">
+          <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--accent-gold);">⚔️ Log New Match</h3>
+          <form id="addMatchForm" onsubmit="saveMatchLog(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <input type="hidden" id="match-team-id">
+            <input type="date" id="match-date" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+            <select id="match-type" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+              <option value="Scrim">Scrim</option>
+              <option value="Official">Official Match</option>
+            </select>
+            <input type="text" id="match-league" placeholder="League/Tournament (Optional)" style="grid-column: span 2; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff;">
+            
+            <select id="match-result" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+              <option value="W">Win (Series)</option>
+              <option value="L">Loss (Series)</option>
+            </select>
+            <input type="text" id="match-score" placeholder="Game Score (e.g. 3-1)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff;">
+            <button type="submit" class="btn" style="grid-column: span 2; background: var(--accent-blue);">Save Match Log</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
     <script src="app.js"></script>
 </body>
 </html>

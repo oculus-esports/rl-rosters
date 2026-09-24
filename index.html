@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OU Esports - Collegiate RL Roster & Scouting DB</title>
+    <title>Collegiate RL Roster & Scouting Database</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,7 +12,7 @@
         <!-- Top Navigation & Auth -->
         <header class="sticky-header">
           <div class="header-top">
-            <h1>OU Esports - RL Scouting Database</h1>
+            <h1>OU Esports - Rocket League Scouting Database</h1>
             <div class="admin-auth">
               <span id="admin-status">Mode: Public Viewer</span>
               <button id="auth-btn" onclick="toggleAuthModal()">Team Login</button>
@@ -31,7 +31,7 @@
 
         <!-- Login Modal / Form -->
         <div id="login-modal" class="card hidden">
-            <h3>Admin Login</h3>
+            <h3>System Login</h3>
             <form style="display: flex; gap: 10px; margin-top: 10px; align-items: center;" autocomplete="off" onsubmit="event.preventDefault(); loginAdmin();">
                 <input type="text" id="admin-email" placeholder="Username / Email" autocomplete="off">
                 <input type="password" id="admin-password" placeholder="Password" autocomplete="new-password">
@@ -135,7 +135,7 @@
           <!-- Match items injected via JS -->
         </div>
     
-        <div style="border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <div class="team-only hidden" style="border-top: 1px solid var(--border-color); padding-top: 15px;">
           <h3 id="match-form-title" style="font-size: 1rem; margin-bottom: 10px; color: var(--accent-gold);">⚔️ Log New Match</h3>
           <form id="addMatchForm" onsubmit="saveMatchLog(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <input type="hidden" id="match-team-id">

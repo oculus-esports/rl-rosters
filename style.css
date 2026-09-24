@@ -383,3 +383,38 @@ body {
   object-fit: contain;
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
 }
+
+/* Niagara Launcher Style A-Z Scroller */
+.az-scroller {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 90;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: rgba(0,0,0,0.3);
+  padding: 10px 5px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.az-scroller span {
+  padding: 1px 5px;
+  transition: all 0.2s ease;
+  transform-origin: right center;
+}
+
+.az-scroller span:hover {
+  color: var(--accent-gold);
+  transform: scale(2);
+}
+
+/* Custom Scrollbar for Match History */
+#match-history-list::-webkit-scrollbar { width: 6px; }
+#match-history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }

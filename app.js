@@ -484,14 +484,17 @@ function renderAll() {
 function generatePlayerRowHTML(p) {
   const displayAlias = p.alias ? p.alias : p.handle;
   const currentRankIcon = getPlayerHighestCurrentIcon(p);
-  const peakIcon = getRLRankIcon(p.peak_rating, '3v3'); // Default to standard mode for peak mapping
+  const peakIcon = getRLRankIcon(p.peak_rating, '3v3'); 
   
   return `
     <div class="player-row" onclick="openPlayerModal('${p.id}')">
       <div class="player-identity">
         <img src="${currentRankIcon}" class="rank-icon" title="Highest Current Rank">
         <div class="player-name-block">
-          <span class="player-alias">${displayAlias}</span>
+          <div style="display: flex; align-items: center;">
+            <span class="player-alias">${displayAlias}</span>
+            ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn mobile-link" style="text-decoration:none;" title="View Tracker" onclick="event.stopPropagation()">🔗</a>` : ''}
+          </div>
           <span class="player-handle">${p.handle}</span>
         </div>
       </div>
@@ -524,7 +527,7 @@ function generatePlayerRowHTML(p) {
         </span>
       </div>
       <div class="action-buttons" onclick="event.stopPropagation()">
-        ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn" style="text-decoration:none;">🔗</a>` : ''}
+        ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn desktop-link" style="text-decoration:none;">🔗</a>` : ''}
         <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:#ff9800; color:#000;" onclick="removePlayer('${p.id}')">🗑️</button>
       </div>
     </div>
@@ -898,21 +901,141 @@ function openPlayerModal(playerId) {
   const p = players.find(p => p.id === playerId);
   if (!p) return;
   document.getElementById('modal-name').innerText = p.alias || p.handle;
+  
+  // Show an edit button if the user is logged into the team editor role
+  const editButtonHTML = isTeam ? `<button onclick="editPlayerModal('${p.id}')" class="btn team-only" style="margin-top: 15px; width: 100%; background: var(--accent-blue);">✏️ Edit Player Stats</button>` : '';
+
   document.getElementById('modal-body').innerHTML = `
     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
-      <img src="${getRLRankIcon(p.peak_rating)}" style="width: 80px; height: 80px; filter: drop-shadow(0 0 10px rgba(255,152,0,0.5));">
+      <img src="${getRLRankIcon(p.peak_rating, '3v3')}" style="width: 80px; height: 80px; filter: drop-shadow(0 0 10px rgba(255,152,0,0.5));">
       <div>
         <h3 style="color: var(--accent-gold); margin:0;">Peak MMR: ${p.peak_rating || 'N/A'} ${p.peak_season ? `(S${p.peak_season})` : ''}</h3>
         <p style="color: var(--text-muted); font-size: 0.9em; margin-top:5px;">${p.notes ? `📝 ${p.notes}` : 'No scouting notes available.'}</p>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-       <div class="form-box"><strong>3v3 Current:</strong> ${p.standard_3v3_current_mmr} <br><em>Best: ${p.standard_3v3_best_mmr}</em></div>
-       <div class="form-box"><strong>2v2 Current:</strong> ${p.doubles_2v2_current_mmr} <br><em>Best: ${p.doubles_2v2_best_mmr}</em></div>
-       <div class="form-box"><strong>1v1 Current:</strong> ${p.duel_1v1_current_mmr} <br><em>Best: ${p.duel_1v1_best_mmr}</em></div>
+       <div class="form-box">
+          <strong style="display:flex; align-items:center; gap:5px;">
+            <img src="${getRLRankIcon(p.standard_3v3_current_mmr, '3v3')}" class="micro-icon"> 3v3 Current:
+          </strong> ${p.standard_3v3_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.standard_3v3_best_mmr || 'N/A'}</em>
+       </div>
+       <div class="form-box">
+          <strong style="display:flex; align-items:center; gap:5px;">
+            <img src="${getRLRankIcon(p.doubles_2v2_current_mmr, '2v2')}" class="micro-icon"> 2v2 Current:
+          </strong> ${p.doubles_2v2_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.doubles_2v2_best_mmr || 'N/A'}</em>
+       </div>
+       <div class="form-box" style="grid-column: span 2;">
+          <strong style="display:flex; align-items:center; gap:5px;">
+            <img src="${getRLRankIcon(p.duel_1v1_current_mmr, '1v1')}" class="micro-icon"> 1v1 Current:
+          </strong> ${p.duel_1v1_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.duel_1v1_best_mmr || 'N/A'}</em>
+       </div>
     </div>
+    ${editButtonHTML}
   `;
   document.getElementById('player-modal').classList.remove('hidden');
+}
+
+function editPlayerModal(playerId) {
+  const p = players.find(p => p.id === playerId);
+  if (!p) return;
+  
+  document.getElementById('modal-name').innerText = `✏️ Edit ${p.alias || p.handle}`;
+  document.getElementById('modal-body').innerHTML = `
+    <form onsubmit="event.preventDefault(); savePlayerEdit('${p.id}')" style="display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="color: var(--text-muted); font-size: 0.85rem;">Alias / Display Name</label>
+        <input type="text" id="edit-p-alias" value="${p.alias || ''}" class="modal-input">
+      </div>
+      <div>
+        <label style="color: var(--text-muted); font-size: 0.85rem;">Scouting Notes</label>
+        <input type="text" id="edit-p-notes" value="${p.notes || ''}" class="modal-input">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+         <div>
+           <label style="color: var(--text-muted); font-size: 0.85rem;">3v3 MMR</label>
+           <input type="number" id="edit-p-3v3" value="${p.standard_3v3_current_mmr || 0}" class="modal-input">
+         </div>
+         <div>
+           <label style="color: var(--text-muted); font-size: 0.85rem;">2v2 MMR</label>
+           <input type="number" id="edit-p-2v2" value="${p.doubles_2v2_current_mmr || 0}" class="modal-input">
+         </div>
+         <div>
+           <label style="color: var(--text-muted); font-size: 0.85rem;">1v1 MMR</label>
+           <input type="number" id="edit-p-1v1" value="${p.duel_1v1_current_mmr || 0}" class="modal-input">
+         </div>
+         <div>
+           <label style="color: var(--text-muted); font-size: 0.85rem;">Tracker URL</label>
+           <input type="text" id="edit-p-tracker" value="${p.tracker_url || ''}" class="modal-input">
+         </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+         <button type="submit" class="btn" id="edit-p-save" style="flex: 1; background: var(--accent-green);">Save Updates</button>
+         <button type="button" class="btn" onclick="openPlayerModal('${p.id}')" style="background: #555;">Cancel</button>
+      </div>
+    </form>
+  `;
+}
+
+async function savePlayerEdit(playerId) {
+  const p = players.find(p => p.id === playerId);
+  if (!p) return;
+  document.getElementById('edit-p-save').innerText = 'Saving...';
+
+  const new3v3 = parseInt(document.getElementById('edit-p-3v3').value) || 0;
+  const new2v2 = parseInt(document.getElementById('edit-p-2v2').value) || 0;
+  const new1v1 = parseInt(document.getElementById('edit-p-1v1').value) || 0;
+
+  let updatedPlayer = { ...p };
+  updatedPlayer.alias = document.getElementById('edit-p-alias').value.trim();
+  updatedPlayer.notes = document.getElementById('edit-p-notes').value.trim();
+  updatedPlayer.tracker_url = document.getElementById('edit-p-tracker').value.trim();
+  
+  // Smart Updates: If current is higher than best, update the best and set the season
+  updatedPlayer.standard_3v3_current_mmr = new3v3;
+  if (new3v3 > (updatedPlayer.standard_3v3_best_mmr || 0)) {
+      updatedPlayer.standard_3v3_best_mmr = new3v3;
+      updatedPlayer.standard_3v3_best_season = CURRENT_RL_SEASON;
+  }
+  
+  updatedPlayer.doubles_2v2_current_mmr = new2v2;
+  if (new2v2 > (updatedPlayer.doubles_2v2_best_mmr || 0)) {
+      updatedPlayer.doubles_2v2_best_mmr = new2v2;
+      updatedPlayer.doubles_2v2_best_season = CURRENT_RL_SEASON;
+  }
+
+  updatedPlayer.duel_1v1_current_mmr = new1v1;
+  if (new1v1 > (updatedPlayer.duel_1v1_best_mmr || 0)) {
+      updatedPlayer.duel_1v1_best_mmr = new1v1;
+      updatedPlayer.duel_1v1_best_season = CURRENT_RL_SEASON;
+  }
+
+  const newPeak = Math.max(updatedPlayer.duel_1v1_best_mmr, updatedPlayer.doubles_2v2_best_mmr, updatedPlayer.standard_3v3_best_mmr);
+  if (newPeak > (updatedPlayer.peak_rating || 0)) {
+      updatedPlayer.peak_rating = newPeak;
+      updatedPlayer.peak_season = CURRENT_RL_SEASON;
+  }
+  
+  updatedPlayer.last_updated = new Date().toLocaleDateString();
+
+  const { error } = await supabaseClient.from('players').upsert(updatedPlayer);
+  if (error) {
+      alert("Error updating player: " + error.message);
+      document.getElementById('edit-p-save').innerText = 'Save Updates';
+      return;
+  }
+
+  // Push new row to rank_history so you have a chart record of the change
+  const historyData = {
+      player_id: playerId,
+      recorded_date: updatedPlayer.last_updated,
+      duel_1v1_mmr: new1v1,
+      doubles_2v2_mmr: new2v2,
+      standard_3v3_mmr: new3v3
+  };
+  await supabaseClient.from('rank_history').insert(historyData);
+
+  await loadData();
+  openPlayerModal(playerId); // Refresh the modal to view mode
 }
 
 function closeModal(e) {
@@ -943,6 +1066,8 @@ window.resetMatchForm = resetMatchForm;
 window.toggleGameDetails = toggleGameDetails;
 window.generateGameInputs = generateGameInputs;
 window.addGameInputRow = addGameInputRow;
+window.editPlayerModal = editPlayerModal;
+window.savePlayerEdit = savePlayerEdit;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();

@@ -58,9 +58,10 @@
                         <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required autocomplete="off">
                         <label style="font-size: 0.85rem; color: #9ba3b4;">Upload Team Logo:</label>
                         <input type="file" id="team-logo-file" accept="image/*">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                          <label style="font-size: 0.85rem; color: #9ba3b4;">Team Color:</label>
-                          <input type="color" id="team-color-input" value="#4caf50" style="background: none; border: none; cursor: pointer; width: 40px; height: 30px;">
+                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-input); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
+                          <span style="font-size: 1.2rem;">🎨</span>
+                          <label for="team-color-input" style="font-size: 0.9rem; color: #fff; cursor: pointer;">Pick Team Color</label>
+                          <input type="color" id="team-color-input" value="#841617" style="background: none; border: none; cursor: pointer; width: 35px; height: 35px; padding: 0; margin-left: 10px;">
                         </div>
                         <button type="submit" class="btn btn-primary">Save Team</button>
                     </form>

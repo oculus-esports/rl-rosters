@@ -143,18 +143,17 @@
             
             <input type="date" id="match-date" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
             <select id="match-type" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+              <option value="Official" selected>Official Match</option>
               <option value="Scrim">Scrim</option>
-              <option value="Official">Official Match</option>
             </select>
             
-            <input type="text" id="match-league" placeholder="League/Tournament (Optional)" style="grid-column: span 2; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff;">
-            
-            <select id="match-result" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-              <option value="W">Win (Series)</option>
-              <option value="L">Loss (Series)</option>
-            </select>
+            <!-- League Input with Autofill Datalist -->
+            <div>
+                <input type="text" id="match-league" list="league-list" placeholder="League/Tournament (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff;">
+                <datalist id="league-list"></datalist>
+            </div>
     
-            <!-- New Series Score Inputs -->
+            <!-- Series Score Inputs (Replaced W/L Dropdown) -->
             <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
                 <label style="color: var(--text-muted); font-size: 0.85rem;">Series:</label>
                 <input type="number" id="match-ou-wins" placeholder="OU" required min="0" style="width: 60px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff; text-align: center;">

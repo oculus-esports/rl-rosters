@@ -445,7 +445,7 @@ function renderAll() {
       const scrimStr = (scrimOuGames > 0 || scrimOppGames > 0) ? `<span style="color: var(--text-muted)">Scrim Gs: ${scrimOuGames}W - ${scrimOppGames}L</span>` : '';
       const divider = (offStr && scrimStr) ? ' | ' : '';
       
-    wlText = `<span class="team-only ${isTeam ? '' : 'hidden'}" style="font-size: 0.70em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 12px; vertical-align: middle; white-space: nowrap;">${offStr}${divider}${scrimStr}</span>`;
+    wlText = `<span style="font-size: 0.70em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 12px; vertical-align: middle; white-space: nowrap;">${offStr}${divider}${scrimStr}</span>`;
     }
       
     const card = document.createElement("div");
@@ -477,6 +477,7 @@ function renderAll() {
     grid.appendChild(card);
   });
   generateAZScroller(sortedTeams);
+  renderRecentMatches();
 }
 
 function generatePlayerRowHTML(p) {
@@ -532,6 +533,44 @@ function generatePlayerRowHTML(p) {
 // ---------------------------------------------
 // HELPERS (Rank Icons, Copy, Modals)
 // ---------------------------------------------
+
+function renderRecentMatches() {
+  const container = document.getElementById('recent-matches-container');
+  const grid = document.getElementById('recent-matches-grid');
+  if (!container || !grid) return;
+
+  // Grab the 8 most recent matches (Official or Scrim)
+  const sortedMatches = [...matchLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+
+  if (sortedMatches.length === 0) {
+      container.style.display = 'none';
+      return;
+  }
+
+  container.style.display = 'block';
+  grid.innerHTML = sortedMatches.map(m => {
+      const oppTeam = teams.find(t => t.id === m.team_id);
+      const oppName = oppTeam ? oppTeam.name : 'Unknown Team';
+      const oppLogo = oppTeam ? oppTeam.logo : 'https://ui-avatars.com/api/?name=?&background=1a1a1a&color=fff';
+      
+      const isWin = m.result === 'W';
+      const resultColor = isWin ? 'var(--accent-green)' : 'var(--accent-red)';
+      
+      return `
+          <div class="recent-card">
+              <img src="${oppLogo}" style="width: 42px; height: 42px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 4px;">
+              <div style="flex: 1; overflow: hidden;">
+                  <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${m.date} • ${m.type}</div>
+                  <div style="font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${oppName}">vs ${oppName}</div>
+              </div>
+              <div style="text-align: right; line-height: 1.1;">
+                  <div style="font-weight: 900; font-size: 1.2rem; color: ${resultColor};">${m.result}</div>
+                  <div style="font-size: 0.85rem; font-weight: bold; color: #fff;">${m.ou_wins}-${m.opp_wins}</div>
+              </div>
+          </div>
+      `;
+  }).join('');
+}
 
 function generateAZScroller(sortedTeams) {
   let scroller = document.getElementById('az-scroller');

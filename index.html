@@ -9,8 +9,8 @@
 </head>
 <body>
     <div class="container">
-        <!-- Top Navigation & Auth -->
-        <header class="sticky-header">
+        <!-- Static Top Navigation & Auth -->
+        <header class="main-header">
           <div class="header-top">
             <h1>OU Esports - Rocket League Scouting Database</h1>
             <div class="admin-auth">
@@ -18,6 +18,10 @@
               <button id="auth-btn" onclick="toggleAuthModal()">Team Login</button>
             </div>
           </div>
+        </header>
+    
+        <!-- Sticky Filter Bar -->
+        <div class="sticky-filters">
           <div class="filters">
             <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()" autocomplete="off">
             <select id="sort-select" onchange="renderAll()">
@@ -27,7 +31,7 @@
               <option value="1v1">Sort Global: 1v1 MMR</option>
             </select>
           </div>
-        </header>
+        </div>
 
         <!-- Login Modal / Form -->
         <div id="login-modal" class="card hidden">
@@ -54,6 +58,10 @@
                         <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required autocomplete="off">
                         <label style="font-size: 0.85rem; color: #9ba3b4;">Upload Team Logo:</label>
                         <input type="file" id="team-logo-file" accept="image/*">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                          <label style="font-size: 0.85rem; color: #9ba3b4;">Team Color:</label>
+                          <input type="color" id="team-color-input" value="#4caf50" style="background: none; border: none; cursor: pointer; width: 40px; height: 30px;">
+                        </div>
                         <button type="submit" class="btn btn-primary">Save Team</button>
                     </form>
                 </div>

@@ -19,12 +19,26 @@
     padding: 0;
 }
 
+/* Fix for iOS Safari white box & overscroll bug */
+html, body {
+  background-color: #0f1117; 
+  min-height: -webkit-fill-available; /* iOS height fix */
+}
+
 body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    line-height: 1.5;
-    padding: 20px;
+  color: var(--text-primary);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  line-height: 1.5;
+  padding: 20px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -1;
+  background: radial-gradient(circle at 10% 0%, #111a2e 0%, #0f1117 40%), 
+              radial-gradient(circle at 90% 100%, #2e1a11 0%, #0f1117 40%);
 }
 
 .container {
@@ -186,20 +200,6 @@ button:active {
     color: var(--text-primary);
 }
 
-/* Fix for iOS Safari white box / background bug */
-body {
-  background-color: #0f1117; 
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  z-index: -1;
-  background: radial-gradient(circle at 10% 0%, #111a2e 0%, #0f1117 40%), 
-              radial-gradient(circle at 90% 100%, #2e1a11 0%, #0f1117 40%);
-}
-
 /* Mobile Link Repositioning & Modal Inputs */
 .mobile-link { display: none; }
 .modal-input {
@@ -236,21 +236,26 @@ body::before {
   margin-bottom: 15px; 
 }
 
-/* Compact Sticky Filter Bar */
+/* Floating Island Sticky Filter Bar */
 .sticky-filters {
+  position: -webkit-sticky; /* REQUIRED for iOS Safari */
   position: sticky;
-  top: 0;
+  top: 15px; /* Floats slightly below the top edge */
   z-index: 100;
-  background: rgba(15, 17, 23, 0.90); /* Blends into the dark body background */
-  backdrop-filter: blur(12px);
-  padding: 10px 0; /* Gives it breathing room when stuck to the top */
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(20, 23, 33, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px); /* REQUIRED for iOS Safari */
+  padding: 15px; 
+  margin-bottom: 25px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .filters {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap; /* Prevents squishing on very narrow phones */
 }
 
 #rosters-container h2 {

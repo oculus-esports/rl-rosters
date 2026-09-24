@@ -455,7 +455,7 @@ function renderAll() {
     if (isOU) card.style.border = "1px solid #841617";
 
     card.innerHTML = `
-      <div class="team-header" ${isOU ? 'style="background: linear-gradient(90deg, rgba(132, 22, 23, 0.3), transparent);"' : ''}>
+      <div class="team-header" style="background: linear-gradient(90deg, ${team.theme_color || '#222634'}80, transparent);">
         <div style="display: flex; align-items: center; gap: 15px;">
           <img src="${team.logo}" class="team-logo" alt="${team.name}">
           <div>

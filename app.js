@@ -13,72 +13,77 @@ let rankHistory = [];
 let matchLogs = [];
 
 async function loadData() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    setAdminState(!!session);
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  setAdminState(session ? session.user : null);
+  
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    setAdminState(session ? session.user : null);
+  });
 
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
-        setAdminState(!!session);
-    });
+  const { data: teamsData } = await supabaseClient.from('teams').select('*');
+  const { data: playersData } = await supabaseClient.from('players').select('*').order('id', { ascending: true });
+  const { data: historyData } = await supabaseClient.from('rank_history').select('*').order('id', { ascending: false });
+  const { data: matchesData } = await supabaseClient.from('match_logs').select('*');
 
-    const { data: teamsData } = await supabaseClient.from('teams').select('*');
-    const { data: playersData } = await supabaseClient.from('players').select('*').order('id', { ascending: true });
-    const { data: historyData } = await supabaseClient.from('rank_history').select('*').order('id', { ascending: false });
-    const { data: matchesData } = await supabaseClient.from('match_logs').select('*');
+  teams = teamsData || [];
+  players = playersData || [];
+  rankHistory = historyData || [];
+  matchLogs = matchesData || [];
 
-    teams = teamsData || [];
-    players = playersData || [];
-    rankHistory = historyData || [];
-    matchLogs = matchesData || [];
-
-    if (teams.length === 0) {
-        await saveTeam({
-            id: 'ou',
-            name: 'University of Oklahoma',
-            logo: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Oklahoma_Sooners_logo.svg'
-        });
-        return;
-    }
-
-    renderAll();
+  if (teams.length === 0) {
+    await saveTeam({id: 'ou', name: 'University of Oklahoma', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Oklahoma_Sooners_logo.svg'});
+    return;
+  }
+  renderAll();
 }
 
-function setAdminState(loggedIn) {
-    isAdmin = loggedIn;
+function setAdminState(user) {
+  if (user) {
+    // Identify Admin by your specific email
+    isAdmin = (user.email === "jacobross@ou.edu");
+    isTeam = true; // Any valid login grants Team privileges
+    
     const statusEl = document.getElementById("admin-status");
     const authBtn = document.getElementById("auth-btn");
-
-    if (isAdmin) {
-        statusEl.innerText = "Mode: Team Editor";
-        authBtn.innerText = "Logout Admin";
-        authBtn.onclick = logoutAdmin;
-        document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("hidden"));
-    } else {
-        statusEl.innerText = "Mode: Public Viewer";
-        authBtn.innerText = "Team Login";
-        authBtn.onclick = toggleAuthModal;
-        document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
-    }
+    
+    statusEl.innerText = isAdmin ? "Mode: Admin Authorized" : "Mode: Team Editor";
+    authBtn.innerText = "Logout";
+    authBtn.onclick = logoutAdmin;
+    
+    document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
+    document.querySelectorAll(".team-only").forEach(el => el.classList.toggle("hidden", !isTeam));
+  } else {
+    isAdmin = false;
+    isTeam = false;
+    document.getElementById("admin-status").innerText = "Mode: Public Viewer";
+    document.getElementById("auth-btn").innerText = "Login";
+    document.getElementById("auth-btn").onclick = toggleAuthModal;
+    document.querySelectorAll(".admin-only, .team-only").forEach(el => el.classList.add("hidden"));
+  }
+  
+  // Force UI to re-render buttons immediately when logging in/out
+  if (teams.length > 0) renderAll();
 }
 
 function toggleAuthModal() {
-    document.getElementById("login-modal").classList.toggle("hidden");
+  document.getElementById("login-modal").classList.toggle("hidden");
 }
 
 async function loginAdmin() {
-    let email = document.getElementById("admin-email").value.trim();
-    const password = document.getElementById("admin-password").value.trim();
+  let email = document.getElementById("admin-email").value.trim();
+  const password = document.getElementById("admin-password").value.trim();
+  
+  if (email.toLowerCase() === "ourl") email = "jacobross@ou.edu";
+  if (email.toLowerCase() === "player") email = "player@ou.edu"; // Change this to match the player email you created in Step 1
 
-    if (email.toLowerCase() === "ourl") email = "jacobross@ou.edu";
-
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    if (error) {
-        alert("Login failed: " + error.message);
-    } else {
-        document.getElementById("login-modal").classList.add("hidden");
-        document.getElementById("admin-email").value = "";
-        document.getElementById("admin-password").value = "";
-    }
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert("Login failed: " + error.message);
+  } else {
+    document.getElementById("login-modal").classList.add("hidden");
+    document.getElementById("admin-email").value = "";
+    document.getElementById("admin-password").value = "";
+  }
 }
 
 async function logoutAdmin() {
@@ -440,7 +445,7 @@ function renderAll() {
       const scrimStr = (scrimOuGames > 0 || scrimOppGames > 0) ? `<span style="color: var(--text-muted)">Scrim Gs: ${scrimOuGames}W - ${scrimOppGames}L</span>` : '';
       const divider = (offStr && scrimStr) ? ' | ' : '';
       
-      wlText = `<span class="admin-only ${isAdmin ? '' : 'hidden'}" style="font-size: 0.70em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 12px; vertical-align: middle; white-space: nowrap;">${offStr}${divider}${scrimStr}</span>`;
+    wlText = `<span class="team-only ${isTeam ? '' : 'hidden'}" style="font-size: 0.70em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 12px; vertical-align: middle; white-space: nowrap;">${offStr}${divider}${scrimStr}</span>`;
     }
       
     const card = document.createElement("div");
@@ -457,10 +462,10 @@ function renderAll() {
           </div>
         </div>
         <div class="action-buttons">
-            ${!isOU ? `<button class="icon-btn admin-only ${isAdmin ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>` : ''}
+            ${!isOU ? `<button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>` : ''}
             <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
             ${!isOU ? `
-            <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display:inline-block;">
+            <div class="admin-only ${isAdmin ? '' : 'hidden'}" style="display:inline-block;">
               <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
             </div>` : ''}
           </div>

@@ -457,12 +457,13 @@ function renderAll() {
           </div>
         </div>
         <div class="action-buttons">
-          <button class="icon-btn admin-only ${isAdmin ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>
-          <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
-          <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display:inline-block;">
-             <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
+            ${!isOU ? `<button class="icon-btn admin-only ${isAdmin ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>` : ''}
+            <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
+            ${!isOU ? `
+            <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display:inline-block;">
+              <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
+            </div>` : ''}
           </div>
-        </div>
       </div>
       <div class="player-list">
         ${teamPlayers.map(p => generatePlayerRowHTML(p)).join('') || '<div class="notes" style="padding:15px;">No players listed.</div>'}

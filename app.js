@@ -536,6 +536,8 @@ function generateAZScroller(sortedTeams) {
   });
 }
 
+// --- MATCH MODAL & JSON LOGIC ---
+
 function resetMatchForm() {
   document.getElementById('addMatchForm').reset();
   document.getElementById('match-log-id').value = '';
@@ -543,14 +545,59 @@ function resetMatchForm() {
   document.getElementById('match-form-title').innerText = '⚔️ Log New Match';
   document.getElementById('match-submit-btn').innerText = 'Save Match Log';
   document.getElementById('match-cancel-btn').classList.add('hidden');
+  
+  // Reset Game Details
+  document.getElementById('game-details-container').classList.add('hidden');
+  document.getElementById('game-inputs-list').innerHTML = '';
+}
+
+function toggleGameDetails() {
+  const container = document.getElementById('game-details-container');
+  container.classList.toggle('hidden');
+  if (!container.classList.contains('hidden') && document.getElementById('game-inputs-list').children.length === 0) {
+      generateGameInputs();
+  }
+}
+
+function generateGameInputs() {
+  const ouWins = parseInt(document.getElementById('match-ou-wins').value) || 0;
+  const oppWins = parseInt(document.getElementById('match-opp-wins').value) || 0;
+  let totalGames = ouWins + oppWins;
+  if (totalGames === 0) totalGames = 3; // Default to visually showing a BO3 if fields are empty
+  
+  const list = document.getElementById('game-inputs-list');
+  list.innerHTML = '';
+  for (let i = 0; i < totalGames; i++) {
+      addGameInputRow();
+  }
+}
+
+function addGameInputRow(ouScore = '', oppScore = '') {
+  const list = document.getElementById('game-inputs-list');
+  const gameIndex = list.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'game-score-row';
+  row.style = "display: flex; align-items: center; gap: 10px;";
+  row.innerHTML = `
+      <span style="color: var(--text-muted); font-size: 0.85rem; width: 55px;">Game <span class="g-num">${gameIndex}</span></span>
+      <input type="number" class="g-ou" placeholder="OU" value="${ouScore}" style="width: 60px; padding: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: #fff; text-align: center; border-radius: 4px;">
+      <span style="color: var(--text-muted);">-</span>
+      <input type="number" class="g-opp" placeholder="OPP" value="${oppScore}" style="width: 60px; padding: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: #fff; text-align: center; border-radius: 4px;">
+      <button type="button" onclick="this.parentElement.remove(); renumberGames();" style="background: transparent; color: #f44336; padding: 0 5px; font-size: 1.1rem; border: none; cursor: pointer;">&times;</button>
+  `;
+  list.appendChild(row);
+}
+
+function renumberGames() {
+  const rows = document.querySelectorAll('.game-score-row .g-num');
+  rows.forEach((el, idx) => el.innerText = idx + 1);
 }
 
 function openMatchModal(teamId) {
   const team = teams.find(t => t.id === teamId);
   document.getElementById('match-modal-title').innerText = `${team.name} - Match History`;
   document.getElementById('match-team-id').value = teamId;
-  
-  resetMatchForm(); // Ensure form is clear when opening
+  resetMatchForm(); 
 
   const list = document.getElementById('match-history-list');
   const teamMatches = matchLogs.filter(m => m.team_id === teamId).sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -558,20 +605,32 @@ function openMatchModal(teamId) {
   if (teamMatches.length === 0) {
       list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9em; text-align:center;">No matches logged yet.</p>';
   } else {
-      list.innerHTML = teamMatches.map(m => `
-          <div style="display:flex; justify-content:space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items:center; background: rgba(0,0,0,0.15); border-radius: 6px; margin-bottom: 5px;">
-              <div>
-                  <strong style="color: ${m.result==='W' ? 'var(--accent-green)' : 'var(--accent-red)'}">${m.result}</strong> 
-                  <span style="color:var(--text-muted); font-size:0.8em; margin-left:8px;">${m.date}</span><br>
-                  <span style="font-size:0.9em; color: #fff;">${m.type} ${m.league ? `<span style="color:var(--accent-blue)">- ${m.league}</span>` : ''}</span>
+      list.innerHTML = teamMatches.map(m => {
+          // Build Individual Game Pills if JSON data exists
+          let gamesHtml = '';
+          if (m.game_details && m.game_details.length > 0) {
+              gamesHtml = `<div style="display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap;">` + 
+                  m.game_details.map(g => `<span style="font-size: 0.7rem; background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); color: ${g.ou > g.opp ? 'var(--accent-green)' : (g.opp > g.ou ? 'var(--accent-red)' : 'var(--text-muted)')};">G${g.game}: ${g.ou}-${g.opp}</span>`).join('') +
+                  `</div>`;
+          }
+
+          return `
+          <div style="display:flex; justify-content:space-between; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15); border-radius: 6px; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                      <strong style="font-size: 1.1rem; color: ${m.result==='W' ? 'var(--accent-green)' : 'var(--accent-red)'}">${m.result}</strong> 
+                      <span style="font-weight:bold; font-size:1.1rem; color: #fff;">${m.ou_wins || 0} - ${m.opp_wins || 0}</span>
+                  </div>
+                  <span style="color:var(--text-muted); font-size:0.8em;">${m.date}</span> | <span style="font-size:0.8em; color: var(--text-muted);">${m.type} ${m.league ? `<span style="color:var(--accent-blue)">- ${m.league}</span>` : ''}</span>
+                  ${gamesHtml}
               </div>
-              <div style="font-weight:bold; font-size:0.9em;">
-                  ${m.games_score || '-'}
-                  <button onclick="editMatchLog('${m.id}')" style="background:transparent; color:var(--accent-gold); border:none; cursor:pointer; margin-left:15px;" title="Edit Log">✏️</button>
-                  <button onclick="deleteMatchLog('${m.id}')" style="background:transparent; color:#f44336; border:none; cursor:pointer; margin-left:5px;" title="Delete Log">🗑️</button>
+              <div style="display: flex; flex-direction: column; justify-content: flex-start; gap: 5px;">
+                  <button onclick="editMatchLog('${m.id}')" style="background:transparent; color:var(--accent-gold); border:none; cursor:pointer; font-size: 1.1rem;" title="Edit Log">✏️</button>
+                  <button onclick="deleteMatchLog('${m.id}')" style="background:transparent; color:#f44336; border:none; cursor:pointer; font-size: 1.1rem;" title="Delete Log">🗑️</button>
               </div>
           </div>
-      `).join('');
+          `
+      }).join('');
   }
   document.getElementById('match-modal').classList.remove('hidden');
 }
@@ -585,66 +644,73 @@ function editMatchLog(matchId) {
   document.getElementById('match-type').value = match.type;
   document.getElementById('match-league').value = match.league || '';
   document.getElementById('match-result').value = match.result;
-  document.getElementById('match-score').value = match.games_score || '';
+  document.getElementById('match-ou-wins').value = match.ou_wins || 0;
+  document.getElementById('match-opp-wins').value = match.opp_wins || 0;
   
   document.getElementById('match-form-title').innerText = '✏️ Edit Match Log';
   document.getElementById('match-submit-btn').innerText = 'Update Match';
   document.getElementById('match-cancel-btn').classList.remove('hidden');
+
+  // Load JSON game details if they exist
+  document.getElementById('game-inputs-list').innerHTML = '';
+  if (match.game_details && match.game_details.length > 0) {
+      document.getElementById('game-details-container').classList.remove('hidden');
+      match.game_details.forEach(g => addGameInputRow(g.ou, g.opp));
+  } else {
+      document.getElementById('game-details-container').classList.add('hidden');
+  }
 }
 
 async function saveMatchLog(e) {
   e.preventDefault();
   const teamId = document.getElementById('match-team-id').value;
-  const matchLogId = document.getElementById('match-log-id').value; // Check if editing
+  const matchLogId = document.getElementById('match-log-id').value; 
   
+  // Gather JSON Game Details
+  let gameDetails = null;
+  const container = document.getElementById('game-details-container');
+  if (!container.classList.contains('hidden')) {
+      const rows = document.querySelectorAll('.game-score-row');
+      if (rows.length > 0) {
+          gameDetails = [];
+          rows.forEach((row, idx) => {
+              const ou = row.querySelector('.g-ou').value;
+              const opp = row.querySelector('.g-opp').value;
+              if (ou !== '' && opp !== '') {
+                  gameDetails.push({ game: idx + 1, ou: parseInt(ou), opp: parseInt(opp) });
+              }
+          });
+      }
+  }
+
   const matchData = {
       team_id: teamId,
       date: document.getElementById('match-date').value,
       type: document.getElementById('match-type').value,
       league: document.getElementById('match-league').value,
       result: document.getElementById('match-result').value,
-      games_score: document.getElementById('match-score').value
+      ou_wins: parseInt(document.getElementById('match-ou-wins').value) || 0,
+      opp_wins: parseInt(document.getElementById('match-opp-wins').value) || 0,
+      game_details: gameDetails
   };
 
   if (matchLogId) {
-      // UPDATE existing record
       const { error } = await supabaseClient.from('match_logs').update(matchData).eq('id', matchLogId);
       if (error) return alert("Error updating match: " + error.message);
   } else {
-      // INSERT new record
       const { error } = await supabaseClient.from('match_logs').insert([matchData]);
       if (error) return alert("Error saving match: " + error.message);
   }
   
   resetMatchForm();
   await loadData(); 
-  openMatchModal(teamId); // Refresh modal view
+  openMatchModal(teamId); 
 }
 
 function closeMatchModal(e) {
   if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-btn')) {
       document.getElementById('match-modal').classList.add('hidden');
   }
-}
-
-async function saveMatchLog(e) {
-  e.preventDefault();
-  const teamId = document.getElementById('match-team-id').value;
-  const newMatch = {
-      team_id: teamId,
-      date: document.getElementById('match-date').value,
-      type: document.getElementById('match-type').value,
-      league: document.getElementById('match-league').value,
-      result: document.getElementById('match-result').value,
-      games_score: document.getElementById('match-score').value
-  };
-
-  const { error } = await supabaseClient.from('match_logs').insert([newMatch]);
-  if (error) return alert("Error saving match: " + error.message);
-  
-  document.getElementById('addMatchForm').reset();
-  await loadData(); 
-  openMatchModal(teamId); // Refresh modal view
 }
 
 async function deleteMatchLog(matchId) {
@@ -803,6 +869,9 @@ window.saveMatchLog = saveMatchLog;
 window.deleteMatchLog = deleteMatchLog;
 window.editMatchLog = editMatchLog;
 window.resetMatchForm = resetMatchForm;
+window.toggleGameDetails = toggleGameDetails;
+window.generateGameInputs = generateGameInputs;
+window.addGameInputRow = addGameInputRow;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();

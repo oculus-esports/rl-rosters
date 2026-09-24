@@ -55,7 +55,7 @@ function setAdminState(loggedIn) {
         authBtn.onclick = toggleAuthModal;
         document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
     }
-    renderAll();
+    ();
 }
 
 function toggleAuthModal() {
@@ -348,162 +348,216 @@ async function removePlayer(playerId) {
 }
 
 // ---------------------------------------------
-// RENDER UI
+// RENDER UI & NEW FEATURES
 // ---------------------------------------------
 
 function renderAll() {
-    const query = document.getElementById("search-input") ? document.getElementById("search-input").value.toLowerCase() : "";
-    populateTeamDropdowns();
+  const query = document.getElementById("search-input") ? document.getElementById("search-input").value.toLowerCase() : "";
+  const sortMode = document.getElementById("sort-select") ? document.getElementById("sort-select").value : "team";
+  
+  populateTeamDropdowns();
+  const grid = document.getElementById("teams-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
 
-    const grid = document.getElementById("teams-grid");
-    if (!grid) return;
-    grid.style.gridTemplateColumns = "1fr"; // Forces 1 card per row
-    grid.innerHTML = "";
+  // Filter players by search query
+  let filteredPlayers = players.filter(p => {
+    const t = teams.find(team => team.id === p.team_id);
+    const teamName = t ? t.name.toLowerCase() : "";
+    return (p.alias && p.alias.toLowerCase().includes(query)) || 
+           p.handle.toLowerCase().includes(query) || 
+           teamName.includes(query);
+  });
 
-    const sortedTeams = [...teams].sort((a, b) => {
-        const isAOU = a.id === 'ou' || a.name.toLowerCase() === 'university of oklahoma';
-        const isBOU = b.id === 'ou' || b.name.toLowerCase() === 'university of oklahoma';
-        if (isAOU) return -1;
-        if (isBOU) return 1;
-        return a.name.localeCompare(b.name);
-    });
+  // Global Sorting logic
+  if (sortMode !== "team") {
+    if (sortMode === "peak") filteredPlayers.sort((a, b) => b.peak_rating - a.peak_rating);
+    if (sortMode === "3v3") filteredPlayers.sort((a, b) => b.standard_3v3_current_mmr - a.standard_3v3_current_mmr);
+    if (sortMode === "1v1") filteredPlayers.sort((a, b) => b.duel_1v1_current_mmr - a.duel_1v1_current_mmr);
+    
+    // Render as a single global leaderboard
+    const card = document.createElement("div");
+    card.className = "team-section";
+    card.innerHTML = `
+      <div class="team-header">
+        <h3 style="margin: 0; color: #fff;">Global Leaderboard</h3>
+      </div>
+      <div class="player-list">
+        ${filteredPlayers.map(p => generatePlayerRowHTML(p)).join('') || '<div class="notes">No players found.</div>'}
+      </div>
+    `;
+    grid.appendChild(card);
+    return;
+  }
 
-    sortedTeams.forEach(team => {
-        const teamPlayers = players.filter(p => p.team_id === team.id && 
-            ((p.alias && p.alias.toLowerCase().includes(query)) || p.handle.toLowerCase().includes(query) || team.name.toLowerCase().includes(query)));
-        
-        if (query && teamPlayers.length === 0 && !team.name.toLowerCase().includes(query)) return;
+  // Standard Team Grouping
+  const sortedTeams = [...teams].sort((a, b) => {
+    const isAOU = a.id === 'ou' || a.name.toLowerCase() === 'university of oklahoma';
+    const isBOU = b.id === 'ou' || b.name.toLowerCase() === 'university of oklahoma';
+    if (isAOU) return -1;
+    if (isBOU) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
-        const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
-        const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
+  sortedTeams.forEach(team => {
+    const teamPlayers = filteredPlayers.filter(p => p.team_id === team.id);
+    if (query && teamPlayers.length === 0 && !team.name.toLowerCase().includes(query)) return;
 
-        const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
+    const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
+    const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
+    const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 
-        const card = document.createElement("div");
-        card.className = "team-card";
-        
-        if (isOU) {
-            card.style.border = "2px solid #841617";
-            card.style.boxShadow = "0 0 15px rgba(132, 22, 23, 0.3)";
-        }
+    const card = document.createElement("div");
+    card.className = "team-section";
+    if (isOU) card.style.border = "1px solid #841617";
 
-        let playersHTML = teamPlayers.map(p => {
-            const pHistory = rankHistory.filter(h => h.player_id === p.id);
-            let trendHtml = "";
-            if (pHistory.length > 1) {
-                const diff = p.standard_3v3_current_mmr - pHistory[1].standard_3v3_mmr;
-                if (diff > 0) trendHtml = `<span style="color: #4caf50; font-size:0.8em;">+${diff}</span>`;
-                else if (diff < 0) trendHtml = `<span style="color: #f44336; font-size:0.8em;">${diff}</span>`;
-            }
-        
-            const displayAlias = p.alias ? p.alias : p.handle;
-            const displayHandle = p.alias ? p.handle : '';
-        
-            const trackerLinkHTML = p.tracker_url 
-                ? `<a href="${p.tracker_url}" target="_blank" style="color: #38ef7d; text-decoration: none; font-size: 0.8em; border: 1px solid #38ef7d44; padding: 4px 8px; border-radius: 4px; background: #38ef7d11; text-align: center;">🔗 Tracker</a>` 
-                : '';
-        
-            return `
-            <div class="player-column">
-                
-                <!-- Player Header -->
-                <div style="border-bottom: 1px solid #2d2d33; padding-bottom: 8px;">
-                    <div id="view-alias-${p.id}">
-                        <div style="font-size: 1.2em; font-weight: 800; color: #fff;">${displayAlias}</div>
-                        ${displayHandle ? `<div style="font-size: 0.85em; color: #888;">${displayHandle}</div>` : ''}
-                    </div>
-                    <div id="edit-alias-${p.id}" class="hidden">
-                        <input type="text" id="input-alias-${p.id}" value="${p.alias || ''}" placeholder="Alias" style="width: 100%; box-sizing: border-box; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px;">
-                    </div>
-                </div>
-        
-                <!-- Peak Rating Badge -->
-                <div style="background: rgba(255,152,0,0.1); border-left: 3px solid #ff9800; padding: 4px 8px; border-radius: 0 4px 4px 0; color: #ffb74d; font-size: 0.8em;">
-                    🏆 <strong>Peak:</strong> ${p.peak_rating || 'N/A'} MMR ${p.peak_season ? `(S${p.peak_season})` : ''}
-                </div>
-        
-                <!-- Ranks Stacked Top to Bottom -->
-                <div class="player-ranks-stack">
-                    
-                    <!-- 1v1 Row -->
-                    <div style="background: #25252b; padding: 6px 10px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.75em; color: #aaa; font-weight: 600;">1v1 DUEL</span>
-                        <div id="view-1v1-${p.id}">
-                            <strong style="color: #fff; font-size: 0.95em;">${p.duel_1v1_current_mmr || 0}</strong>
-                            <span style="font-size: 0.75em; color: #777;">(${p.duel_1v1_best_mmr || 0})</span>
-                        </div>
-                        <div id="edit-1v1-${p.id}" class="hidden">
-                            <input type="number" id="input-1v1-${p.id}" value="${p.duel_1v1_current_mmr || 0}" style="width: 55px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
-                        </div>
-                    </div>
-        
-                    <!-- 2v2 Row -->
-                    <div style="background: #25252b; padding: 6px 10px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.75em; color: #aaa; font-weight: 600;">2v2 DOUBLES</span>
-                        <div id="view-2v2-${p.id}">
-                            <strong style="color: #fff; font-size: 0.95em;">${p.doubles_2v2_current_mmr || 0}</strong>
-                            <span style="font-size: 0.75em; color: #777;">(${p.doubles_2v2_best_mmr || 0})</span>
-                        </div>
-                        <div id="edit-2v2-${p.id}" class="hidden">
-                            <input type="number" id="input-2v2-${p.id}" value="${p.doubles_2v2_current_mmr || 0}" style="width: 55px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
-                        </div>
-                    </div>
-        
-                    <!-- 3v3 Row -->
-                    <div style="background: #25252b; padding: 6px 10px; border-radius: 5px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.75em; color: #aaa; font-weight: 600;">3v3 STANDARD</span>
-                        <div id="view-3v3-${p.id}">
-                            <strong style="color: #fff; font-size: 0.95em;">${p.standard_3v3_current_mmr || 0}</strong>
-                            <span style="font-size: 0.75em; color: #777;">(${p.standard_3v3_best_mmr || 0})</span>
-                            ${trendHtml}
-                        </div>
-                        <div id="edit-3v3-${p.id}" class="hidden">
-                            <input type="number" id="input-3v3-${p.id}" value="${p.standard_3v3_current_mmr || 0}" style="width: 55px; background: #111; color: #fff; border: 1px solid #555; border-radius: 4px;">
-                        </div>
-                    </div>
-        
-                </div>
-        
-                ${p.notes ? `<div style="font-size: 0.75em; color: #888; font-style: italic;">📝 ${p.notes}</div>` : ''}
-        
-                <!-- Actions -->
-                <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid #2d2d33; display: flex; flex-direction: column; gap: 6px;">
-                    ${trackerLinkHTML}
-                    <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 6px;">
-                        <button id="edit-player-btn-${p.id}" onclick="enableInlinePlayerEdit('${p.id}')" style="flex: 1; background: #ff9800; color: #000; font-weight: bold; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 0.75em;">Edit</button>
-                        <button onclick="removePlayer('${p.id}')" style="flex: 1; background: #f44336; color: #fff; font-weight: bold; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 0.75em;">Delete</button>
-                    </div>
-                </div>
-        
-            </div>`;
-        }).join('');
+    card.innerHTML = `
+      <div class="team-header" ${isOU ? 'style="background: linear-gradient(90deg, rgba(132, 22, 23, 0.3), transparent);"' : ''}>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <img src="${team.logo}" class="team-logo" alt="${team.name}">
+          <div>
+            <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '🏆' : ''}</h3>
+            <div class="avg-mmr">Avg 3v3: ${avgMMR}</div>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
+          <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display:inline-block;">
+             <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
+          </div>
+        </div>
+      </div>
+      <div class="player-list">
+        ${teamPlayers.map(p => generatePlayerRowHTML(p)).join('') || '<div class="notes" style="padding:15px;">No players listed.</div>'}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
 
-        card.innerHTML = `
-            <div class="team-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 15px; ${isOU ? 'background: linear-gradient(90deg, rgba(132, 22, 23, 0.2), transparent); padding: 12px; border-radius: 6px;' : ''}">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <img src="${team.logo}" class="team-logo" alt="${team.name}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #222; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                        <input type="file" id="edit-logo-${team.id}" accept="image/*" class="hidden" style="max-width: 140px; font-size: 0.7em;">
-                    </div>
-                    <div class="team-info">
-                        <h3 style="margin: 0; font-size: 1.3em; color: #fff;" id="display-name-${team.id}">${team.name} ${isOU ? '🏆' : ''}</h3>
-                        <input type="text" id="input-name-${team.id}" class="hidden" value="${team.name}" style="font-size: 1.1em; font-weight: bold; margin-bottom: 5px; padding: 4px; border-radius: 4px; border: 1px solid #555; background: #111; color: white;">
-                        <div class="avg-mmr" style="color: #ffb74d; font-size: 0.85em; font-weight: 600; margin-top: 2px;">Avg 3v3 MMR: ${avgMMR}</div>
-                    </div>
-                </div>
-                <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display: flex; gap: 8px;">
-                    <button id="edit-btn-${team.id}" onclick="enableInlineEdit('${team.id}')" style="background-color: #ff9800; padding: 5px 12px; font-size: 0.8em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: black;">Edit Team</button>
-                    <button onclick="deleteTeam('${team.id}')" style="background-color: #f44336; padding: 5px 12px; font-size: 0.8em; font-weight: 600; border: none; border-radius: 4px; cursor: pointer; color: white;">Delete Team</button>
-                </div>
-            </div>
-            
-            <!-- Horizontal Flex Box for Player Columns -->
-            <div class="player-list" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                ${playersHTML || '<div class="notes" style="color: #666; font-style: italic;">No players listed.</div>'}
-            </div>
-        `;
-        grid.appendChild(card);
-    });
+function generatePlayerRowHTML(p) {
+  const displayAlias = p.alias ? p.alias : p.handle;
+  const rankIcon = getRLRankIcon(p.peak_rating);
+  
+  return `
+    <div class="player-row" onclick="openPlayerModal('${p.id}')">
+      <div class="player-identity">
+        <img src="${rankIcon}" class="rank-icon" title="Peak Rank">
+        <div class="player-name-block">
+          <span class="player-alias">${displayAlias}</span>
+          <span class="player-handle">${p.handle}</span>
+        </div>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">Peak</span>
+        <span class="stat-value stat-peak">${p.peak_rating || 'N/A'}</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">3v3</span>
+        <span class="stat-value">
+          <img src="${getRLRankIcon(p.standard_3v3_current_mmr, '3v3')}" class="micro-icon">
+          ${p.standard_3v3_current_mmr || 0}
+        </span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">2v2</span>
+        <span class="stat-value">
+          <img src="${getRLRankIcon(p.doubles_2v2_current_mmr, '2v2')}" class="micro-icon">
+          ${p.doubles_2v2_current_mmr || 0}
+        </span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">1v1</span>
+        <span class="stat-value">
+          <img src="${getRLRankIcon(p.duel_1v1_current_mmr, '1v1')}" class="micro-icon">
+          ${p.duel_1v1_current_mmr || 0}
+        </span>
+      </div>
+      <div class="action-buttons" onclick="event.stopPropagation()">
+        ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn" style="text-decoration:none;">🔗</a>` : ''}
+        <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:#ff9800; color:#000;" onclick="removePlayer('${p.id}')">🗑️</button>
+      </div>
+    </div>
+  `;
+}
+
+// ---------------------------------------------
+// HELPERS (Rank Icons, Copy, Modals)
+// ---------------------------------------------
+
+function getRLRankIcon(mmr, mode = '3v3') {
+  if (!mmr || mmr <= 0) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_0.png'; // Unranked Fallback
+
+  let ssl, gc3, gc2, gc1, c3, c2, c1, d1, p1, g1, s1;
+
+  if (mode === '1v1') {
+    ssl = 1355; gc3 = 1296; gc2 = 1236; gc1 = 1176; c3 = 1115; c2 = 1055; c1 = 995;
+    d1 = 815; p1 = 635; g1 = 440; s1 = 275;
+  } else if (mode === '2v2') {
+    ssl = 1875; gc3 = 1707; gc2 = 1576; gc1 = 1435; c3 = 1315; c2 = 1196; c1 = 1075;
+    d1 = 835; p1 = 655; g1 = 475; s1 = 296;
+  } else {
+    // 3v3 Standard
+    ssl = 1860; gc3 = 1715; gc2 = 1576; gc1 = 1436; c3 = 1315; c2 = 1195; c1 = 1076;
+    d1 = 835; p1 = 655; g1 = 475; s1 = 296;
+  }
+
+  // Supersonic Legend & Grand Champion
+  if (mmr >= ssl) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_22.png';
+  if (mmr >= gc3) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_21.png';
+  if (mmr >= gc2) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_20.png';
+  if (mmr >= gc1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_19.png';
+  
+  // Champion
+  if (mmr >= c3) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_18.png';
+  if (mmr >= c2) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_17.png';
+  if (mmr >= c1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_16.png';
+  
+  // Diamond 1, Plat 1, Gold 1, Silver 1, Bronze 1
+  if (mmr >= d1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_13.png';
+  if (mmr >= p1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_10.png';
+  if (mmr >= g1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_7.png';
+  if (mmr >= s1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_4.png';
+  
+  // Bronze Fallback (If they have MMR but it's lower than Silver 1)
+  return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_1.png'; 
+}
+
+function copyTeamStats(teamId) {
+  const team = teams.find(t => t.id === teamId);
+  const teamPlayers = players.filter(p => p.team_id === teamId);
+  let text = `**${team.name} Rosters & Stats**\n`;
+  teamPlayers.forEach(p => {
+    text += `- ${p.alias || p.handle}: Peak ${p.peak_rating} | 3v3 ${p.standard_3v3_current_mmr} | 2v2 ${p.doubles_2v2_current_mmr}\n`;
+  });
+  navigator.clipboard.writeText(text).then(() => alert(`${team.name} stats copied to clipboard!`));
+}
+
+function openPlayerModal(playerId) {
+  const p = players.find(p => p.id === playerId);
+  if (!p) return;
+  document.getElementById('modal-name').innerText = p.alias || p.handle;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+      <img src="${getRLRankIcon(p.peak_rating)}" style="width: 80px; height: 80px; filter: drop-shadow(0 0 10px rgba(255,152,0,0.5));">
+      <div>
+        <h3 style="color: var(--accent-gold); margin:0;">Peak MMR: ${p.peak_rating || 'N/A'} ${p.peak_season ? `(S${p.peak_season})` : ''}</h3>
+        <p style="color: var(--text-muted); font-size: 0.9em; margin-top:5px;">${p.notes ? `📝 ${p.notes}` : 'No scouting notes available.'}</p>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+       <div class="form-box"><strong>3v3 Current:</strong> ${p.standard_3v3_current_mmr} <br><em>Best: ${p.standard_3v3_best_mmr}</em></div>
+       <div class="form-box"><strong>2v2 Current:</strong> ${p.doubles_2v2_current_mmr} <br><em>Best: ${p.doubles_2v2_best_mmr}</em></div>
+       <div class="form-box"><strong>1v1 Current:</strong> ${p.duel_1v1_current_mmr} <br><em>Best: ${p.duel_1v1_best_mmr}</em></div>
+    </div>
+  `;
+  document.getElementById('player-modal').classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-btn')) {
+    document.getElementById('player-modal').classList.add('hidden');
+  }
 }
 
 window.toggleAuthModal = toggleAuthModal;
@@ -517,6 +571,9 @@ window.addPlayerManualSubmit = addPlayerManualSubmit;
 window.enableInlinePlayerEdit = enableInlinePlayerEdit;
 window.saveInlinePlayer = saveInlinePlayer;
 window.removePlayer = removePlayer;
+window.openPlayeModal = openPlayerModal;
+window.closeModal = closeModal;
+window.copyTeamStats = copyTeamStats;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();

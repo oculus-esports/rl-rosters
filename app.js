@@ -10,6 +10,7 @@ let isAdmin = false;
 let teams = [];
 let players = [];
 let rankHistory = [];
+let matchLogs = [];
 
 async function loadData() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -22,10 +23,12 @@ async function loadData() {
     const { data: teamsData } = await supabaseClient.from('teams').select('*');
     const { data: playersData } = await supabaseClient.from('players').select('*').order('id', { ascending: true });
     const { data: historyData } = await supabaseClient.from('rank_history').select('*').order('id', { ascending: false });
+    const { data: matchesData } = await supabaseClient.from('match_logs').select('*');
 
     teams = teamsData || [];
     players = playersData || [];
     rankHistory = historyData || [];
+    matchLogs = matchesData || [];
 
     if (teams.length === 0) {
         await saveTeam({
@@ -45,13 +48,13 @@ function setAdminState(loggedIn) {
     const authBtn = document.getElementById("auth-btn");
 
     if (isAdmin) {
-        statusEl.innerText = "Mode: Admin Authorized";
+        statusEl.innerText = "Mode: Team Editor";
         authBtn.innerText = "Logout Admin";
         authBtn.onclick = logoutAdmin;
         document.querySelectorAll(".admin-only").forEach(el => el.classList.remove("hidden"));
     } else {
         statusEl.innerText = "Mode: Public Viewer";
-        authBtn.innerText = "Admin Login";
+        authBtn.innerText = "Team Login";
         authBtn.onclick = toggleAuthModal;
         document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
     }
@@ -415,6 +418,16 @@ function renderAll() {
     const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
     const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 
+    // Calculate Match W/L
+    const teamMatches = matchLogs.filter(m => m.team_id === team.id);
+    const wins = teamMatches.filter(m => m.result === 'W').length;
+    const losses = teamMatches.filter(m => m.result === 'L').length;
+    let wlText = "";
+    if (wins > 0 || losses > 0) {
+      const color = wins >= losses ? '#4caf50' : '#f44336'; // Green if positive/even, Red if negative
+      wlText = `<span class="admin-only ${isAdmin ? '' : 'hidden'}" style="color: ${color}; font-size: 0.75em; margin-left: 10px; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 12px; vertical-align: middle;">${wins}W - ${losses}L</span>`;
+    }
+      
     const card = document.createElement("div");
     card.className = "team-section";
     if (isOU) card.style.border = "1px solid #841617";
@@ -424,11 +437,12 @@ function renderAll() {
         <div style="display: flex; align-items: center; gap: 15px;">
           <img src="${team.logo}" class="team-logo" alt="${team.name}">
           <div>
-            <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '🏆' : ''}</h3>
+            <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '🏆' : ''} ${wlText}</h3>
             <div class="avg-mmr">Avg 3v3: ${avgMMR}</div>
           </div>
         </div>
         <div class="action-buttons">
+          <button class="icon-btn admin-only ${isAdmin ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>
           <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
           <div class="${isAdmin ? '' : 'hidden'} admin-only" style="display:inline-block;">
              <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
@@ -441,6 +455,7 @@ function renderAll() {
     `;
     grid.appendChild(card);
   });
+  generateAZScroller(sortedTeams);
 }
 
 function generatePlayerRowHTML(p) {
@@ -496,6 +511,151 @@ function generatePlayerRowHTML(p) {
 // ---------------------------------------------
 // HELPERS (Rank Icons, Copy, Modals)
 // ---------------------------------------------
+
+function generateAZScroller(sortedTeams) {
+  let scroller = document.getElementById('az-scroller');
+  if (!scroller) {
+    scroller = document.createElement('div');
+    scroller.id = 'az-scroller';
+    scroller.className = 'az-scroller';
+    document.body.appendChild(scroller);
+  }
+  scroller.innerHTML = '';
+  // Get unique starting letters
+  const letters = [...new Set(sortedTeams.map(t => t.name.charAt(0).toUpperCase()))].sort();
+  
+  letters.forEach(letter => {
+    const span = document.createElement('span');
+    span.innerText = letter;
+    span.onclick = () => {
+      // Find the first team section that starts with this letter
+      const target = Array.from(document.querySelectorAll('.team-section h3')).find(h => h.innerText.startsWith(letter));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    scroller.appendChild(span);
+  });
+}
+
+function resetMatchForm() {
+  document.getElementById('addMatchForm').reset();
+  document.getElementById('match-log-id').value = '';
+  document.getElementById('match-date').valueAsDate = new Date();
+  document.getElementById('match-form-title').innerText = '⚔️ Log New Match';
+  document.getElementById('match-submit-btn').innerText = 'Save Match Log';
+  document.getElementById('match-cancel-btn').classList.add('hidden');
+}
+
+function openMatchModal(teamId) {
+  const team = teams.find(t => t.id === teamId);
+  document.getElementById('match-modal-title').innerText = `${team.name} - Match History`;
+  document.getElementById('match-team-id').value = teamId;
+  
+  resetMatchForm(); // Ensure form is clear when opening
+
+  const list = document.getElementById('match-history-list');
+  const teamMatches = matchLogs.filter(m => m.team_id === teamId).sort((a,b) => new Date(b.date) - new Date(a.date));
+  
+  if (teamMatches.length === 0) {
+      list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9em; text-align:center;">No matches logged yet.</p>';
+  } else {
+      list.innerHTML = teamMatches.map(m => `
+          <div style="display:flex; justify-content:space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items:center; background: rgba(0,0,0,0.15); border-radius: 6px; margin-bottom: 5px;">
+              <div>
+                  <strong style="color: ${m.result==='W' ? 'var(--accent-green)' : 'var(--accent-red)'}">${m.result}</strong> 
+                  <span style="color:var(--text-muted); font-size:0.8em; margin-left:8px;">${m.date}</span><br>
+                  <span style="font-size:0.9em; color: #fff;">${m.type} ${m.league ? `<span style="color:var(--accent-blue)">- ${m.league}</span>` : ''}</span>
+              </div>
+              <div style="font-weight:bold; font-size:0.9em;">
+                  ${m.games_score || '-'}
+                  <button onclick="editMatchLog('${m.id}')" style="background:transparent; color:var(--accent-gold); border:none; cursor:pointer; margin-left:15px;" title="Edit Log">✏️</button>
+                  <button onclick="deleteMatchLog('${m.id}')" style="background:transparent; color:#f44336; border:none; cursor:pointer; margin-left:5px;" title="Delete Log">🗑️</button>
+              </div>
+          </div>
+      `).join('');
+  }
+  document.getElementById('match-modal').classList.remove('hidden');
+}
+
+function editMatchLog(matchId) {
+  const match = matchLogs.find(m => m.id === matchId);
+  if (!match) return;
+  
+  document.getElementById('match-log-id').value = match.id;
+  document.getElementById('match-date').value = match.date;
+  document.getElementById('match-type').value = match.type;
+  document.getElementById('match-league').value = match.league || '';
+  document.getElementById('match-result').value = match.result;
+  document.getElementById('match-score').value = match.games_score || '';
+  
+  document.getElementById('match-form-title').innerText = '✏️ Edit Match Log';
+  document.getElementById('match-submit-btn').innerText = 'Update Match';
+  document.getElementById('match-cancel-btn').classList.remove('hidden');
+}
+
+async function saveMatchLog(e) {
+  e.preventDefault();
+  const teamId = document.getElementById('match-team-id').value;
+  const matchLogId = document.getElementById('match-log-id').value; // Check if editing
+  
+  const matchData = {
+      team_id: teamId,
+      date: document.getElementById('match-date').value,
+      type: document.getElementById('match-type').value,
+      league: document.getElementById('match-league').value,
+      result: document.getElementById('match-result').value,
+      games_score: document.getElementById('match-score').value
+  };
+
+  if (matchLogId) {
+      // UPDATE existing record
+      const { error } = await supabaseClient.from('match_logs').update(matchData).eq('id', matchLogId);
+      if (error) return alert("Error updating match: " + error.message);
+  } else {
+      // INSERT new record
+      const { error } = await supabaseClient.from('match_logs').insert([matchData]);
+      if (error) return alert("Error saving match: " + error.message);
+  }
+  
+  resetMatchForm();
+  await loadData(); 
+  openMatchModal(teamId); // Refresh modal view
+}
+
+function closeMatchModal(e) {
+  if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-btn')) {
+      document.getElementById('match-modal').classList.add('hidden');
+  }
+}
+
+async function saveMatchLog(e) {
+  e.preventDefault();
+  const teamId = document.getElementById('match-team-id').value;
+  const newMatch = {
+      team_id: teamId,
+      date: document.getElementById('match-date').value,
+      type: document.getElementById('match-type').value,
+      league: document.getElementById('match-league').value,
+      result: document.getElementById('match-result').value,
+      games_score: document.getElementById('match-score').value
+  };
+
+  const { error } = await supabaseClient.from('match_logs').insert([newMatch]);
+  if (error) return alert("Error saving match: " + error.message);
+  
+  document.getElementById('addMatchForm').reset();
+  await loadData(); 
+  openMatchModal(teamId); // Refresh modal view
+}
+
+async function deleteMatchLog(matchId) {
+  if(!confirm("Delete this match log?")) return;
+  const { error } = await supabaseClient.from('match_logs').delete().eq('id', matchId);
+  if (error) return alert("Error deleting match: " + error.message);
+  
+  await loadData();
+  const teamId = document.getElementById('match-team-id').value;
+  openMatchModal(teamId);
+}
 
 // Evaluates MMR against the gamemode to return a standardized rank tier (0-22)
 function getRankTier(mmr, mode = '3v3') {
@@ -638,6 +798,11 @@ window.removePlayer = removePlayer;
 window.openPlayeModal = openPlayerModal;
 window.closeModal = closeModal;
 window.copyTeamStats = copyTeamStats;
+window.closeMatchModal = closeMatchModal;
+window.saveMatchLog = saveMatchLog;
+window.deleteMatchLog = deleteMatchLog;
+window.editMatchLog = editMatchLog;
+window.resetMatchForm = resetMatchForm;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();

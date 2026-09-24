@@ -485,7 +485,9 @@ function generatePlayerRowHTML(p) {
 // ---------------------------------------------
 
 function getRLRankIcon(mmr, mode = '3v3') {
-  if (!mmr || mmr <= 0) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_0.png'; // Unranked Fallback
+  const baseUrl = 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s15rank';
+  
+  if (!mmr || mmr <= 0) return baseUrl + '0.png'; // Unranked Fallback
 
   let ssl, gc3, gc2, gc1, c3, c2, c1, d1, p1, g1, s1;
 
@@ -502,24 +504,24 @@ function getRLRankIcon(mmr, mode = '3v3') {
   }
 
   // Supersonic Legend & Grand Champion
-  if (mmr >= ssl) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_22.png';
-  if (mmr >= gc3) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_21.png';
-  if (mmr >= gc2) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_20.png';
-  if (mmr >= gc1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_19.png';
+  if (mmr >= ssl) return baseUrl + '22.png';
+  if (mmr >= gc3) return baseUrl + '21.png';
+  if (mmr >= gc2) return baseUrl + '20.png';
+  if (mmr >= gc1) return baseUrl + '19.png';
   
   // Champion
-  if (mmr >= c3) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_18.png';
-  if (mmr >= c2) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_17.png';
-  if (mmr >= c1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_16.png';
+  if (mmr >= c3) return baseUrl + '18.png';
+  if (mmr >= c2) return baseUrl + '17.png';
+  if (mmr >= c1) return baseUrl + '16.png';
   
   // Diamond 1, Plat 1, Gold 1, Silver 1, Bronze 1
-  if (mmr >= d1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_13.png';
-  if (mmr >= p1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_10.png';
-  if (mmr >= g1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_7.png';
-  if (mmr >= s1) return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_4.png';
+  if (mmr >= d1) return baseUrl + '13.png';
+  if (mmr >= p1) return baseUrl + '10.png';
+  if (mmr >= g1) return baseUrl + '7.png';
+  if (mmr >= s1) return baseUrl + '4.png';
   
   // Bronze Fallback (If they have MMR but it's lower than Silver 1)
-  return 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/s4_1.png'; 
+  return baseUrl + '1.png'; 
 }
 
 function copyTeamStats(teamId) {

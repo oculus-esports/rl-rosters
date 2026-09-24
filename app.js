@@ -900,6 +900,7 @@ function copyTeamStats(teamId) {
 function openPlayerModal(playerId) {
   const p = players.find(p => p.id === playerId);
   if (!p) return;
+  
   document.getElementById('modal-name').innerText = p.alias || p.handle;
   
   // Show an edit button if the user is logged into the team editor role
@@ -916,22 +917,32 @@ function openPlayerModal(playerId) {
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
        <div class="form-box">
           <strong style="display:flex; align-items:center; gap:5px;">
-            <img src="${getRLRankIcon(p.standard_3v3_current_mmr, '3v3')}" class="micro-icon"> 3v3 Current:
-          </strong> ${p.standard_3v3_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.standard_3v3_best_mmr || 'N/A'}</em>
+            <img src="${getRLRankIcon(p.standard_3v3_current_mmr, '3v3')}" class="micro-icon"> 3v3 Current: ${p.standard_3v3_current_mmr || 0}
+          </strong>
+          <em style="color:var(--text-muted); display:flex; align-items:center; gap:5px; margin-top:6px;">
+            <img src="${getRLRankIcon(p.standard_3v3_best_mmr, '3v3')}" class="micro-icon"> Best: ${p.standard_3v3_best_mmr || 'N/A'}
+          </em>
        </div>
        <div class="form-box">
           <strong style="display:flex; align-items:center; gap:5px;">
-            <img src="${getRLRankIcon(p.doubles_2v2_current_mmr, '2v2')}" class="micro-icon"> 2v2 Current:
-          </strong> ${p.doubles_2v2_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.doubles_2v2_best_mmr || 'N/A'}</em>
+            <img src="${getRLRankIcon(p.doubles_2v2_current_mmr, '2v2')}" class="micro-icon"> 2v2 Current: ${p.doubles_2v2_current_mmr || 0}
+          </strong>
+          <em style="color:var(--text-muted); display:flex; align-items:center; gap:5px; margin-top:6px;">
+            <img src="${getRLRankIcon(p.doubles_2v2_best_mmr, '2v2')}" class="micro-icon"> Best: ${p.doubles_2v2_best_mmr || 'N/A'}
+          </em>
        </div>
        <div class="form-box" style="grid-column: span 2;">
           <strong style="display:flex; align-items:center; gap:5px;">
-            <img src="${getRLRankIcon(p.duel_1v1_current_mmr, '1v1')}" class="micro-icon"> 1v1 Current:
-          </strong> ${p.duel_1v1_current_mmr || 0} <br><em style="color:var(--text-muted);">Best: ${p.duel_1v1_best_mmr || 'N/A'}</em>
+            <img src="${getRLRankIcon(p.duel_1v1_current_mmr, '1v1')}" class="micro-icon"> 1v1 Current: ${p.duel_1v1_current_mmr || 0}
+          </strong>
+          <em style="color:var(--text-muted); display:flex; align-items:center; gap:5px; margin-top:6px;">
+            <img src="${getRLRankIcon(p.duel_1v1_best_mmr, '1v1')}" class="micro-icon"> Best: ${p.duel_1v1_best_mmr || 'N/A'}
+          </em>
        </div>
     </div>
     ${editButtonHTML}
   `;
+  
   document.getElementById('player-modal').classList.remove('hidden');
 }
 

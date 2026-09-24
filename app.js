@@ -55,7 +55,6 @@ function setAdminState(loggedIn) {
         authBtn.onclick = toggleAuthModal;
         document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
     }
-    ();
 }
 
 function toggleAuthModal() {

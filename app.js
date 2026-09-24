@@ -126,7 +126,8 @@ async function saveTeam(directData = null) {
         }
 
         const teamId = name.toLowerCase().replace(/\s+/g, '-');
-        newTeam = { id: teamId, name: name, logo: logoUrl };
+        const themeColor = document.getElementById("team-color-input").value;
+        newTeam = { id: teamId, name: name, logo: logoUrl, theme_color: themeColor };
     }
 
     const { error } = await supabaseClient.from('teams').upsert(newTeam);
@@ -386,7 +387,7 @@ function renderAll() {
     const card = document.createElement("div");
     card.className = "team-section";
     card.innerHTML = `
-      <div class="team-header">
+      <div class="team-header" style="background: linear-gradient(90deg, ${team.theme_color}80, transparent);">
         <h3 style="margin: 0; color: #fff;">Global Leaderboard</h3>
       </div>
       <div class="player-list">

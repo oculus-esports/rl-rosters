@@ -452,7 +452,7 @@ function renderAll() {
         <div style="display: flex; align-items: center; gap: 15px;">
           <img src="${team.logo}" class="team-logo" alt="${team.name}">
           <div>
-            <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '🏆' : ''} ${wlText}</h3>
+            <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '☝️' : ''} ${wlText}</h3>
             <div class="avg-mmr">Avg 3v3: ${avgMMR}</div>
           </div>
         </div>

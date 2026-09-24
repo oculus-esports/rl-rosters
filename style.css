@@ -356,3 +356,30 @@ body {
   .player-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .player-identity { grid-column: span 2; }
 }
+
+/* Fix massive inline rank icons */
+.micro-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.1));
+}
+
+/* Ensure stats block aligns the text and new micro icons perfectly */
+.stat-value { 
+  font-size: 1rem; 
+  font-weight: 600; 
+  color: #fff; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+}
+
+/* Ensure the main row rank icon stays contained */
+.rank-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
+}

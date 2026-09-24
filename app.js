@@ -464,13 +464,14 @@ function renderAll() {
           </div>
         </div>
         <div class="action-buttons">
-            ${!isOU ? `<button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>` : ''}
-            <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
-            ${!isOU ? `
-            <div class="admin-only ${isAdmin ? '' : 'hidden'}" style="display:inline-block;">
-              <button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;">🗑️</button>
-            </div>` : ''}
+          ${!isOU ? `<button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log</button>` : ''}
+          <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
+          
+          <div class="admin-only ${isAdmin ? '' : 'hidden'}" style="display:inline-block;">
+            <button class="icon-btn" onclick="openEditTeamModal('${team.id}')" style="background:var(--accent-blue);" title="Edit Team">✏️</button>
+            ${!isOU ? `<button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:#f44336;" title="Delete Team">🗑️</button>` : ''}
           </div>
+        </div>
       </div>
       <div class="player-list">
         ${teamPlayers.map(p => generatePlayerRowHTML(p)).join('') || '<div class="notes" style="padding:15px;">No players listed.</div>'}
@@ -1056,6 +1057,78 @@ function closeModal(e) {
   }
 }
 
+function openEditTeamModal(teamId) {
+  const team = teams.find(t => t.id === teamId);
+  if (!team) return;
+
+  document.getElementById('modal-name').innerText = `✏️ Edit ${team.name}`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <form onsubmit="event.preventDefault(); saveTeamEdit('${team.id}')" style="display: flex; flex-direction: column; gap: 15px;">
+      <div>
+        <label style="color: var(--text-muted); font-size: 0.85rem;">Team Name</label>
+        <input type="text" id="edit-t-name" value="${team.name}" class="modal-input" required>
+      </div>
+      <div>
+        <label style="color: var(--text-muted); font-size: 0.85rem;">Logo URL (Or upload below)</label>
+        <input type="text" id="edit-t-logo-url" value="${team.logo}" class="modal-input">
+      </div>
+      <div>
+        <label style="color: var(--text-muted); font-size: 0.85rem;">Upload New Logo (Optional)</label>
+        <input type="file" id="edit-t-logo-file" accept="image/*" class="modal-input" style="background: var(--bg-input);">
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
+        <span style="font-size: 1.2rem;">🎨</span>
+        <label for="edit-t-color" style="font-size: 0.9rem; color: #fff; cursor: pointer;">Team Color</label>
+        <input type="color" id="edit-t-color" value="${team.theme_color || '#222634'}" style="background: none; border: none; cursor: pointer; width: 35px; height: 35px; padding: 0; margin-left: 10px;">
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+         <button type="submit" class="btn" id="edit-t-save" style="flex: 1; background: var(--accent-green);">Save Updates</button>
+         <button type="button" class="btn" onclick="document.getElementById('player-modal').classList.add('hidden')" style="background: #555;">Cancel</button>
+      </div>
+    </form>
+  `;
+
+  document.getElementById('player-modal').classList.remove('hidden');
+}
+
+async function saveTeamEdit(teamId) {
+  const team = teams.find(t => t.id === teamId);
+  if (!team) return;
+
+  const btn = document.getElementById('edit-t-save');
+  btn.innerText = 'Saving...';
+
+  const newName = document.getElementById('edit-t-name').value.trim();
+  const color = document.getElementById('edit-t-color').value;
+  let logoUrl = document.getElementById('edit-t-logo-url').value.trim();
+  const fileInput = document.getElementById('edit-t-logo-file');
+
+  // Handle Logo Upload if a new file was chosen
+  if (fileInput.files.length > 0) {
+      const uploadedUrl = await uploadLogoFile(fileInput.files[0]);
+      if (uploadedUrl) logoUrl = uploadedUrl;
+  }
+
+  const updatedTeam = {
+      id: team.id,
+      name: newName,
+      logo: logoUrl,
+      theme_color: color
+  };
+
+  const { error } = await supabaseClient.from('teams').update(updatedTeam).eq('id', team.id);
+
+  if (error) {
+      alert("Error updating team: " + error.message);
+      btn.innerText = 'Save Updates';
+      return;
+  }
+
+  document.getElementById('player-modal').classList.add('hidden');
+  await loadData();
+}
+
 window.toggleAuthModal = toggleAuthModal;
 window.loginAdmin = loginAdmin;
 window.logoutAdmin = logoutAdmin;
@@ -1080,6 +1153,8 @@ window.generateGameInputs = generateGameInputs;
 window.addGameInputRow = addGameInputRow;
 window.editPlayerModal = editPlayerModal;
 window.savePlayerEdit = savePlayerEdit;
+window.openEditTeamModal = openEditTeamModal;
+window.saveTeamEdit = saveTeamEdit;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();

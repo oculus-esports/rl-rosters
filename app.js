@@ -412,10 +412,6 @@ function renderAll() {
     });
 
     const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
-    const teamPlayers = filteredPlayers.filter(p => p.team_id === team.id);
-    if (query && teamPlayers.length === 0 && !team.name.toLowerCase().includes(query)) return;
-
-    const validMMR = teamPlayers.filter(p => p.standard_3v3_current_mmr > 0);
     const avgMMR = validMMR.length ? Math.round(validMMR.reduce((sum, p) => sum + p.standard_3v3_current_mmr, 0) / validMMR.length) : "N/A";
     const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 

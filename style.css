@@ -265,8 +265,13 @@ body {
   cursor: pointer;
 }
 
+/* Add subtle alternating shading to even rows */
+.player-row:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
 .player-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05) !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }

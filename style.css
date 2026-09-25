@@ -6,6 +6,7 @@
     --text-primary: #f0f2f5;
     --text-muted: #9ba3b4;
     --accent-red: #841617; /* OU Crimson */
+    --accent-red-bright: #ff5252; /* High-visibility red for losses/warnings */
     --accent-gold: #ff9800;
     --accent-blue: #2196f3;
     --accent-green: #4caf50;

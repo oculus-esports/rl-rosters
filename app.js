@@ -497,7 +497,10 @@ function generatePlayerRowHTML(p) {
             <span class="player-alias">${displayAlias}</span>
             ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn mobile-link" style="text-decoration:none;" title="View Tracker" onclick="event.stopPropagation()">🔗</a>` : ''}
           </div>
-          <span class="player-handle">${p.handle}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="player-handle">${p.handle}</span>
+            ${p.last_updated ? `<span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.7;" title="Last MMR Update">⏱️ ${p.last_updated}</span>` : ''}
+          </div>
         </div>
       </div>
       <div class="stat-block">
@@ -913,6 +916,7 @@ function openPlayerModal(playerId) {
       <img src="${getRLRankIcon(p.peak_rating, '3v3')}" style="width: 80px; height: 80px; filter: drop-shadow(0 0 10px rgba(255,152,0,0.5));">
       <div>
         <h3 style="color: var(--accent-gold); margin:0;">Peak MMR: ${p.peak_rating || 'N/A'} ${p.peak_season ? `(S${p.peak_season})` : ''}</h3>
+        ${p.last_updated ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">⏱️ Last Verified: ${p.last_updated}</div>` : ''}
         <p style="color: var(--text-muted); font-size: 0.9em; margin-top:5px;">${p.notes ? `📝 ${p.notes}` : 'No scouting notes available.'}</p>
       </div>
     </div>

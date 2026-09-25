@@ -442,7 +442,7 @@ function renderAll() {
 
     let wlText = "";
     if (offWins > 0 || offLosses > 0 || scrimOuGames > 0 || scrimOppGames > 0) {
-      const offStr = (offWins > 0 || offLosses > 0) ? `<span style="color: ${offWins >= offLosses ? 'var(--accent-green)' : 'var(--accent-red)'}">Official: ${offWins}W - ${offLosses}L</span>` : '';
+      const offStr = (offWins > 0 || offLosses > 0) ? `<span style="color: ${offWins >= offLosses ? 'var(--accent-green)' : 'var(--accent-red-bright)'}">Official: ${offWins}W - ${offLosses}L</span>` : '';
       const scrimStr = (scrimOuGames > 0 || scrimOppGames > 0) ? `<span style="color: var(--text-muted)">Scrim Gs: ${scrimOuGames}W - ${scrimOppGames}L</span>` : '';
       const divider = (offStr && scrimStr) ? ' | ' : '';
       

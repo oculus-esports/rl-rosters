@@ -1,208 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collegiate RL Roster & Scouting Database</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collegiate RL Roster & Scouting Database</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Static Top Navigation & Auth -->
-        <header class="main-header">
-          <div class="header-top">
-            <h1>OU Esports - Rocket League Scouting Database</h1>
-            <div class="admin-auth">
-              <span id="admin-status">Mode: Public Viewer</span>
-              <button id="auth-btn" onclick="toggleAuthModal()">Team Login</button>
-            </div>
-          </div>
-        </header>
-    
-        <!-- Sticky Filter Bar -->
-        <div class="sticky-filters">
-          <div class="filters">
-            <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()" autocomplete="off">
-            <select id="sort-select" onchange="renderAll()">
-              <option value="team">Group by: Team</option>
-              <option value="peak">Sort Global: Peak MMR</option>
-              <option value="3v3">Sort Global: 3v3 MMR</option>
-              <option value="1v1">Sort Global: 1v1 MMR</option>
-            </select>
-          </div>
-        </div>
 
-        <!-- Login Modal / Form -->
-        <div id="login-modal" class="card hidden">
-            <h3>System Login</h3>
-            <form style="display: flex; gap: 10px; margin-top: 10px; align-items: center;" autocomplete="off" onsubmit="event.preventDefault(); loginAdmin();">
-                <input type="text" id="admin-email" placeholder="Username / Email" autocomplete="off">
-                <input type="password" id="admin-password" placeholder="Password" autocomplete="new-password">
-                <button type="submit">Sign In</button>
-                <button type="button" onclick="toggleAuthModal()" style="background-color: #555;">Cancel</button>
-            </form>
-        </div>
+  <!-- Toast Notifications Container -->
+  <div id="toast-container"></div>
 
-        <!-- Admin Controls Panel -->
-        <section id="admin-panel" class="card admin-only hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2>Admin Management Panel</h2>
-            </div>
-            
-            <div class="form-grid">
-                <!-- Add / Edit Team Form -->
-                <div class="form-box">
-                    <h3>Add New Team</h3>
-                    <form id="addTeamForm" autocomplete="off" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="team-name-input" placeholder="School / Team Name (e.g. UT Austin)" required autocomplete="off">
-                        <label style="font-size: 0.85rem; color: #9ba3b4;">Upload Team Logo:</label>
-                        <input type="file" id="team-logo-file" accept="image/*">
-                        <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-input); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
-                          <span style="font-size: 1.2rem;">🎨</span>
-                          <label for="team-color-input" style="font-size: 0.9rem; color: #fff; cursor: pointer;">Pick Team Color</label>
-                          <input type="color" id="team-color-input" value="#841617" style="background: none; border: none; cursor: pointer; width: 35px; height: 35px; padding: 0; margin-left: 10px;">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Team</button>
-                    </form>
-                </div>
-
-                <!-- Add Player Card (MANUAL ONLY NOW) -->
-                <div class="form-box">
-                    <h3>Add Player to Roster</h3>
-                    
-                    <form id="addPlayerManualForm" autocomplete="off" onsubmit="addPlayerManualSubmit(event);" style="display: flex; flex-direction: column; gap: 10px;">
-                        <input type="text" id="manualUsername" placeholder="Player GamerTag / Name" required autocomplete="off" />
-                        
-                        <!-- Searchable Team Droplist -->
-                        <datalist id="teams-list"></datalist>
-                        <input type="text" id="manualTeamInput" list="teams-list" placeholder="Type or Select Team..." required autocomplete="off" />
-                        
-                        <!-- 1v1 Grid -->
-                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px;">RANKED DUEL 1V1</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                            <input type="number" id="m1v1_cur" placeholder="Current MMR" autocomplete="off" />
-                            <input type="number" id="m1v1_best" placeholder="Best MMR" autocomplete="off" />
-                            <input type="number" id="m1v1_season" placeholder="Best Season (e.g. 15)" autocomplete="off" />
-                        </div>
-
-                        <!-- 2v2 Grid -->
-                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px; margin-top: 5px;">RANKED DOUBLES 2V2</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                            <input type="number" id="m2v2_cur" placeholder="Current MMR" autocomplete="off" />
-                            <input type="number" id="m2v2_best" placeholder="Best MMR" autocomplete="off" />
-                            <input type="number" id="m2v2_season" placeholder="Best Season" autocomplete="off" />
-                        </div>
-
-                        <!-- 3v3 Grid -->
-                        <label style="font-size: 0.8em; color: #aaa; margin-bottom: -5px; margin-top: 5px;">RANKED STANDARD 3V3</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                            <input type="number" id="m3v3_cur" placeholder="Current MMR" autocomplete="off" />
-                            <input type="number" id="m3v3_best" placeholder="Best MMR" autocomplete="off" />
-                            <input type="number" id="m3v3_season" placeholder="Best Season" autocomplete="off" />
-                        </div>
-                
-                        <input type="url" id="manualTrackerUrl" placeholder="Tracker Profile URL (Optional)" autocomplete="off" style="margin-top: 5px;" />
-                        <input type="text" id="manualAlias" placeholder="Player Alias/Other known names (Optional)" autocomplete="off" />
-                        <input type="text" id="manualNotes" placeholder="Scouting Notes (Optional)" autocomplete="off" />
-                        
-                        <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Save Player</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Recent Matches Fan View -->
-        <section id="recent-matches-container" style="margin-top: 20px; display: none;">
-          <h2 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Recent Matches</h2>
-          <div id="recent-matches-grid" class="recent-scroll">
-            <!-- Match cards injected via JS -->
-          </div>
-        </section>
-        
-        <!-- Main Display: Rosters (Outside Admin Panel) -->
-        <section id="rosters-container" style="margin-top: 30px;">
-            <h2>Collegiate Teams & Rosters</h2>
-            <div id="teams-grid" class="teams-grid"></div>
-        </section>
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="modal-overlay hidden" style="z-index: 10000;">
+    <div class="modal-content card confirm-card" style="max-width: 400px; text-align: center;">
+      <h3 id="confirm-title" style="color: #fff; margin-bottom: 10px;">Are you sure?</h3>
+      <p id="confirm-message" style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;"></p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button id="confirm-yes" class="btn" style="background: var(--accent-red); flex: 1;">Yes</button>
+        <button id="confirm-no" class="btn" style="background: #555; flex: 1;">Cancel</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Interactive Player Modal -->
-    <div id="player-modal" class="modal-overlay hidden" onclick="closeModal(event)">
-      <div class="modal-content card" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h2 id="modal-name">Player Name</h2>
-          <button onclick="closeModal(event)" class="close-btn">&times;</button>
+  <div class="container">
+    <!-- Static Top Navigation & Auth -->
+    <header class="main-header rl-header-bg">
+      <div class="header-overlay"></div>
+      <div class="header-top" style="position: relative; z-index: 2;">
+        <h1>OU Esports - Rocket League Scouting Database</h1>
+        <div class="admin-auth">
+          <span id="admin-status">Mode: Public Viewer</span>
+          <button id="auth-btn" class="btn-auth" onclick="toggleAuthModal()">Team Login</button>
         </div>
-        <div id="modal-body" class="modal-body">
-          <!-- Injected via JS -->
-        </div>
+      </div>
+    </header>
+
+    <!-- Sticky Filter Bar -->
+    <div class="sticky-filters">
+      <div class="filters">
+        <input type="text" id="search-input" placeholder="Search by School, Player Name, or Alias..." onkeyup="renderAll()" autocomplete="off">
+        <select id="sort-select" onchange="renderAll()">
+          <option value="team">Group by: Team</option>
+          <option value="peak">Sort Global: Peak MMR</option>
+          <option value="3v3">Sort Global: 3v3 MMR</option>
+          <option value="2v2">Sort Global: 2v2 MMR</option>
+          <option value="1v1">Sort Global: 1v1 MMR</option>
+        </select>
       </div>
     </div>
 
-    <!-- Match History Modal -->
-    <div id="match-modal" class="modal-overlay hidden" onclick="closeMatchModal(event)">
-      <div class="modal-content card" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h2 id="match-modal-title">Match History</h2>
-          <button onclick="closeMatchModal(event)" class="close-btn">&times;</button>
-        </div>
-        
-        <div id="match-history-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-          <!-- Match items injected via JS -->
-        </div>
-    
-        <div class="team-only hidden" style="border-top: 1px solid var(--border-color); padding-top: 15px;">
-          <h3 id="match-form-title" style="font-size: 1rem; margin-bottom: 10px; color: var(--accent-gold);">⚔️ Log New Match</h3>
-          <form id="addMatchForm" onsubmit="saveMatchLog(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="hidden" id="match-team-id">
-            <input type="hidden" id="match-log-id"> 
-            
-            <input type="date" id="match-date" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-            <select id="match-type" required style="background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-              <option value="Official" selected>Official Match</option>
-              <option value="Scrim">Scrim</option>
-            </select>
-            
-            <!-- League Input with Autofill Datalist -->
-            <div>
-                <input type="text" id="match-league" list="league-list" placeholder="League/Tournament (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff;">
-                <datalist id="league-list"></datalist>
+    <!-- Login Modal / Form -->
+    <div id="login-modal" class="card hidden">
+      <h3 style="color: var(--text-primary);">System Login</h3>
+      <form style="display: flex; gap: 10px; margin-top: 10px; align-items: center;" autocomplete="off" onsubmit="event.preventDefault(); loginAdmin();">
+        <input type="text" id="admin-email" placeholder="Username / Email" autocomplete="off">
+        <input type="password" id="admin-password" placeholder="Password" autocomplete="new-password">
+        <button type="submit" class="btn-auth">Sign In</button>
+        <button type="button" onclick="toggleAuthModal()" style="background-color: #555;">Cancel</button>
+      </form>
+    </div>
+
+    <!-- Admin Controls Panel -->
+    <section id="admin-panel" class="card admin-only hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="color: var(--text-primary);">Admin Management Panel</h2>
+      </div>
+      <div class="form-grid">
+        <!-- Add Team Form -->
+        <div class="form-box" style="grid-column: span 2;">
+          <h3 style="color: var(--text-primary);">Add New Team</h3>
+          <form id="addTeamForm" autocomplete="off" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 250px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted);">School / Team Name</label>
+              <input type="text" id="team-name-input" placeholder="e.g. UT Austin" required autocomplete="off">
             </div>
-    
-            <!-- Series Score Inputs (Replaced W/L Dropdown) -->
-            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
-                <label style="color: var(--text-muted); font-size: 0.85rem;">Series:</label>
-                <input type="number" id="match-ou-wins" placeholder="OU" required min="0" style="width: 60px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff; text-align: center;">
-                <span style="color: #fff; font-weight: bold;">-</span>
-                <input type="number" id="match-opp-wins" placeholder="OPP" required min="0" style="width: 60px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff; text-align: center;">
+            <div style="flex: 1; min-width: 200px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted);">Upload Team Logo</label>
+              <input type="file" id="team-logo-file" accept="image/*" style="background: var(--bg-input);">
             </div>
-            
-            <!-- Optional Game Details Expansion -->
-            <div style="grid-column: span 2;">
-                <button type="button" onclick="toggleGameDetails()" style="background: transparent; color: var(--accent-blue); border: 1px dashed var(--accent-blue); width: 100%; font-size: 0.85rem; padding: 8px; border-radius: 6px;">+ Add Individual Game Scores (Optional)</button>
-                
-                <div id="game-details-container" class="hidden" style="margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
-                       <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Game Scores (OU - OPP)</span>
-                       <div>
-                           <button type="button" onclick="generateGameInputs()" style="background: rgba(255,255,255,0.1); color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; margin-right: 5px;">Auto-Generate Rows</button>
-                           <button type="button" onclick="addGameInputRow()" style="background: var(--accent-gold); color: #000; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px;">+ Add 1</button>
-                       </div>
-                    </div>
-                    <div id="game-inputs-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                </div>
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-input); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); height: 42px;">
+              <span style="font-size: 1.2rem;">🎨</span>
+              <label for="team-color-input" style="font-size: 0.9rem; color: #fff; cursor: pointer; white-space: nowrap;">Team Color</label>
+              <input type="color" id="team-color-input" value="#4e0002" style="background: none; border: none; cursor: pointer; width: 30px; height: 30px; padding: 0;">
             </div>
-            
-            <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 5px;">
-              <button type="submit" id="match-submit-btn" class="btn" style="flex: 1; background: var(--accent-blue);">Save Match Log</button>
-              <button type="button" id="match-cancel-btn" class="btn hidden" onclick="resetMatchForm()" style="background: #555;">Cancel</button>
-            </div>
+            <button type="submit" class="btn btn-primary" style="height: 42px; background: var(--accent-red);">Save Team</button>
           </form>
         </div>
       </div>
+    </section>
+
+    <!-- Recent Matches Fan View -->
+    <section id="recent-matches-container" style="margin-top: 20px; display: none;">
+      <h2 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Recent Matches</h2>
+      <div id="recent-matches-grid" class="recent-scroll">
+        <!-- Match cards injected via JS -->
+      </div>
+    </section>
+
+    <!-- Main Display: Rosters -->
+    <section id="rosters-container" style="margin-top: 30px;">
+      <h2 style="color: var(--text-primary);">Collegiate Teams & Rosters</h2>
+      <div id="teams-grid" class="teams-grid"></div>
+    </section>
+
+  </div>
+
+  <!-- Interactive Player Modal (Profile & Edit) -->
+  <div id="player-modal" class="modal-overlay hidden" onclick="closeModal(event, 'player-modal')">
+    <div class="modal-content card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-name" style="color: #fff;">Player Name</h2>
+        <button onclick="closeModal(event, 'player-modal')" class="close-btn">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body">
+        <!-- Injected via JS -->
+      </div>
     </div>
-    
-    <script src="app.js"></script>
+  </div>
+
+  <!-- Add Player to Specific Team Modal -->
+  <div id="add-player-modal" class="modal-overlay hidden" onclick="closeModal(event, 'add-player-modal')">
+    <div class="modal-content card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="add-player-title" style="color: #fff;">Add Player</h2>
+        <button onclick="closeModal(event, 'add-player-modal')" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addPlayerManualForm" autocomplete="off" onsubmit="addPlayerManualSubmit(event);" style="display: flex; flex-direction: column; gap: 12px;">
+          <input type="hidden" id="manualTeamInput"> <!-- Auto-filled by JS -->
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 0.8em; color: var(--text-muted);">GamerTag / Handle *</label>
+              <input type="text" id="manualUsername" placeholder="Player GamerTag" required autocomplete="off" class="modal-input" />
+            </div>
+            <div>
+              <label style="font-size: 0.8em; color: var(--text-muted);">Roster Role</label>
+              <select id="manualRole" class="modal-input" style="padding: 9px;">
+                <option value="Starter" selected>Starter</option>
+                <option value="Sub">Substitute</option>
+                <option value="Archived">Archived (Hidden)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 3v3 Grid -->
+          <label style="font-size: 0.8em; color: var(--text-muted); margin-bottom: -8px; margin-top: 5px;">RANKED STANDARD 3V3</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <input type="number" id="m3v3_cur" placeholder="Current" autocomplete="off" class="modal-input" />
+            <input type="number" id="m3v3_best" placeholder="Best MMR" autocomplete="off" class="modal-input" />
+            <input type="number" id="m3v3_season" placeholder="Season" autocomplete="off" class="modal-input" />
+          </div>
+
+          <!-- 2v2 Grid -->
+          <label style="font-size: 0.8em; color: var(--text-muted); margin-bottom: -8px; margin-top: 5px;">RANKED DOUBLES 2V2</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <input type="number" id="m2v2_cur" placeholder="Current" autocomplete="off" class="modal-input" />
+            <input type="number" id="m2v2_best" placeholder="Best MMR" autocomplete="off" class="modal-input" />
+            <input type="number" id="m2v2_season" placeholder="Season" autocomplete="off" class="modal-input" />
+          </div>
+
+          <!-- 1v1 Grid -->
+          <label style="font-size: 0.8em; color: var(--text-muted); margin-bottom: -8px; margin-top: 5px;">RANKED DUEL 1V1</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <input type="number" id="m1v1_cur" placeholder="Current" autocomplete="off" class="modal-input" />
+            <input type="number" id="m1v1_best" placeholder="Best MMR" autocomplete="off" class="modal-input" />
+            <input type="number" id="m1v1_season" placeholder="Season" autocomplete="off" class="modal-input" />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+            <div>
+              <label style="font-size: 0.8em; color: var(--text-muted);">Tracker Profile URL</label>
+              <input type="url" id="manualTrackerUrl" placeholder="https://..." autocomplete="off" class="modal-input" />
+            </div>
+            <div>
+              <label style="font-size: 0.8em; color: var(--text-muted);">Alias / Display Name</label>
+              <input type="text" id="manualAlias" placeholder="Optional" autocomplete="off" class="modal-input" />
+            </div>
+          </div>
+          
+          <div>
+            <label style="font-size: 0.8em; color: var(--text-muted);">Scouting Notes</label>
+            <input type="text" id="manualNotes" placeholder="Strengths, weaknesses, etc." autocomplete="off" class="modal-input" />
+          </div>
+
+          <button type="submit" class="btn" style="margin-top: 10px; background: var(--accent-green); width: 100%;">Save Player</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match History & Logging Modal -->
+  <div id="match-modal" class="modal-overlay hidden" onclick="closeMatchModal(event)">
+    <div class="modal-content card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="match-modal-title" style="color: #fff;">Match History</h2>
+        <button onclick="closeMatchModal(event)" class="close-btn">&times;</button>
+      </div>
+      
+      <div id="match-history-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+        <!-- Match items injected via JS -->
+      </div>
+      
+      <div class="team-only hidden" style="border-top: 1px solid var(--border-color); padding-top: 15px;">
+        <h3 id="match-form-title" style="font-size: 1rem; margin-bottom: 10px; color: var(--accent-gold);">⚔️ Log New Match</h3>
+        <form id="addMatchForm" onsubmit="saveMatchLog(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <input type="hidden" id="match-team-id">
+          <input type="hidden" id="match-log-id">
+          
+          <input type="date" id="match-date" required class="modal-input">
+          
+          <select id="match-type" required class="modal-input">
+            <option value="Official" selected>Official Match</option>
+            <option value="Scrim">Scrim</option>
+          </select>
+
+          <!-- Custom Autocomplete League Input -->
+          <div class="custom-autocomplete" style="grid-column: span 2;">
+            <input type="text" id="match-league" placeholder="League/Tournament (Optional)" class="modal-input" autocomplete="off">
+            <div id="league-autocomplete-list" class="autocomplete-items hidden"></div>
+          </div>
+
+          <div style="grid-column: span 2; display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 5px;">
+            <label style="color: var(--text-muted); font-size: 0.85rem;">Series Score:</label>
+            <input type="number" id="match-ou-wins" placeholder="OU" required min="0" class="modal-input" style="width: 70px; text-align: center;">
+            <span style="color: #fff; font-weight: bold;">-</span>
+            <input type="number" id="match-opp-wins" placeholder="OPP" required min="0" class="modal-input" style="width: 70px; text-align: center;">
+          </div>
+
+          <!-- Optional Game Details Expansion -->
+          <div style="grid-column: span 2; margin-top: 5px;">
+            <button type="button" onclick="toggleGameDetails()" style="background: transparent; color: var(--accent-blue); border: 1px dashed var(--accent-blue); width: 100%; font-size: 0.85rem; padding: 8px; border-radius: 6px;">+ Add Individual Game Scores (Optional)</button>
+            <div id="game-details-container" class="hidden" style="margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Game Scores (OU - OPP)</span>
+                <div>
+                  <button type="button" onclick="generateGameInputs()" class="btn" style="background: rgba(255,255,255,0.1); padding: 4px 8px; font-size: 0.75rem;">Auto-Generate Rows</button>
+                  <button type="button" onclick="addGameInputRow()" class="btn" style="background: var(--accent-gold); color: #000; padding: 4px 8px; font-size: 0.75rem;">+ Add 1</button>
+                </div>
+              </div>
+              <div id="game-inputs-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </div>
+
+          <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" id="match-submit-btn" class="btn" style="flex: 1; background: var(--accent-blue);">Save Match Log</button>
+            <button type="button" id="match-cancel-btn" class="btn hidden" onclick="resetMatchForm()" style="background: #555;">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Public Match Details Modal (For Recent Matches Click) -->
+  <div id="match-details-modal" class="modal-overlay hidden" onclick="closeModal(event, 'match-details-modal')">
+    <div class="modal-content card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="details-modal-title" style="color: #fff;">Match Details</h2>
+        <button onclick="closeModal(event, 'match-details-modal')" class="close-btn">&times;</button>
+      </div>
+      <div id="details-modal-body" class="modal-body" style="text-align: center;">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=12"></script>
 </body>
 </html>

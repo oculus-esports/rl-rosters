@@ -28,7 +28,7 @@
 }
 
 /* Fix for iOS Safari white box & overscroll bug */
-html, body {
+html {
   background-color: var(--bg-primary); 
   min-height: -webkit-fill-available;
 }
@@ -38,25 +38,28 @@ body {
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   line-height: 1.5;
   padding: 20px;
+  /* By removing background-color from the body, the image can now show through! */
 }
 
 /* Faint Red/Cream Ambient Lighting */
 body::before {
   content: "";
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
+  top: 0; left: 0; right: 0; bottom: 0; /* Replaces vw/vh for perfect fullscreen coverage */
   z-index: -1;
   background: radial-gradient(circle at 10% 0%, rgba(78, 0, 2, 0.15) 0%, transparent 40%), 
               radial-gradient(circle at 90% 100%, rgba(190, 180, 165, 0.05) 0%, transparent 40%);
+  pointer-events: none;
 }
 
 /* Full Page Faint B&W Stadium Background */
 body::after {
   content: "";
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
+  top: 0; left: 0; right: 0; bottom: 0; /* Replaces vw/vh for perfect fullscreen coverage */
   z-index: -2;
-  background-image: url('https://i.redd.it/quq2kbxf7al91.png');
+  /* Make sure to paste your fixed URL below if it differs from this one! */
+  background-image: url('https://i.redd.it/quq2kbxf7al91.png'); 
   background-size: cover;
   background-position: center;
   filter: grayscale(100%);

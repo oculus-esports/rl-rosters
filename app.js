@@ -539,15 +539,16 @@ function renderAll() {
       return (b.peak_rating || 0) - (a.peak_rating || 0);
     });
 
-    // Calculate Comprehensive Team Averages
+    // Calculate Comprehensive Team Averages based ONLY on Starters
+    const teamStarters = teamPlayers.filter(p => p.role === 'Starter');
     const getAvg = (arr, key) => {
       const valid = arr.filter(p => p[key] > 0);
-      return valid.length ? Math.round(valid.reduce((sum, p) => sum + p[key], 0) / valid.length) : "N/A";
+      return valid.length ? Math.round(valid.reduce((sum, p) => sum + p[key], 0) / valid.length) : 0;
     };
-    const avgPeak = getAvg(teamPlayers, 'peak_rating');
-    const avg3v3 = getAvg(teamPlayers, 'standard_3v3_current_mmr');
-    const avg2v2 = getAvg(teamPlayers, 'doubles_2v2_current_mmr');
-    const avg1v1 = getAvg(teamPlayers, 'duel_1v1_current_mmr');
+    const avgPeak = getAvg(teamStarters, 'peak_rating');
+    const avg3v3 = getAvg(teamStarters, 'standard_3v3_current_mmr');
+    const avg2v2 = getAvg(teamStarters, 'doubles_2v2_current_mmr');
+    const avg1v1 = getAvg(teamStarters, 'duel_1v1_current_mmr');
     
     const isOU = team.id === 'ou' || team.name.toLowerCase() === 'university of oklahoma';
 
@@ -581,10 +582,10 @@ function renderAll() {
           <div>
             <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '☝️' : ''} ${wlText}</h3>
             <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">Avg Peak: <strong style="color:var(--accent-cream);">${avgPeak}</strong></span>
-              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">3v3: <strong style="color:#fff;">${avg3v3}</strong></span>
-              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">2v2: <strong style="color:#fff;">${avg2v2}</strong></span>
-              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">1v1: <strong style="color:#fff;">${avg1v1}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 5px;">Avg Peak: <img src="${getRLRankIcon(avgPeak, '3v3')}" style="width: 14px; height: 14px; object-fit: contain;"> <strong style="color:var(--accent-cream);">${avgPeak || 'N/A'}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 5px;">3v3: <img src="${getRLRankIcon(avg3v3, '3v3')}" style="width: 14px; height: 14px; object-fit: contain;"> <strong style="color:#fff;">${avg3v3 || 'N/A'}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 5px;">2v2: <img src="${getRLRankIcon(avg2v2, '2v2')}" style="width: 14px; height: 14px; object-fit: contain;"> <strong style="color:#fff;">${avg2v2 || 'N/A'}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 5px;">1v1: <img src="${getRLRankIcon(avg1v1, '1v1')}" style="width: 14px; height: 14px; object-fit: contain;"> <strong style="color:#fff;">${avg1v1 || 'N/A'}</strong></span>
             </div>
           </div>
         </div>
@@ -666,7 +667,7 @@ function generatePlayerRowHTML(p) {
       </div>
       <div class="action-buttons" onclick="event.stopPropagation()">
         ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn desktop-link" style="text-decoration:none;">🔗</a>` : ''}
-        <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:var(--accent-red-bright); color:#000;" title="Delete Player" onclick="removePlayer('${p.id}')">🗑️️</button>
+        <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:var(--accent-red-bright); color:#000;" title="Delete Player" onclick="removePlayer('${p.id}')">🗑</button>
       </div>
     </div>
   `;
@@ -726,7 +727,7 @@ function renderRecentMatches() {
   const grid = document.getElementById('recent-matches-grid');
   if (!container || !grid) return;
 
-  const sortedMatches = [...matchLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  const sortedMatches = [...matchLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
   if (sortedMatches.length === 0) {
       container.style.display = 'none';
       return;

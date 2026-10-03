@@ -59,7 +59,8 @@ body::after {
   background-image: url('https://cdn.pixabay.com/photo/2021/08/11/11/15/rocket-league-6538234_1280.jpg');
   background-size: cover;
   background-position: center;
-  filter: grayscale(100%) opacity(0.06); 
+  filter: grayscale(100%);
+  opacity: 0.10; 
   pointer-events: none;
 }
 
@@ -381,15 +382,15 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .sticky-filters {
   position: -webkit-sticky;
   position: sticky;
-  top: 15px; 
+  top: 0; 
   z-index: 100;
-  background: rgba(10, 10, 10, 0.85); 
+  background: rgba(10, 10, 10, 0.98); 
   backdrop-filter: blur(24px); 
   -webkit-backdrop-filter: blur(24px);
   padding: 15px 20px; 
-  margin: 0 0 25px 0; /* Removed negative margins to fix width */
-  border-radius: 12px; 
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 0 0 25px 0; 
+  border-radius: 0 0 12px 12px; 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 

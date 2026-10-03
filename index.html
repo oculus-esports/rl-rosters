@@ -29,7 +29,7 @@
     <header class="main-header rl-header-bg">
       <div class="header-overlay"></div>
       <div class="header-top" style="position: relative; z-index: 2;">
-        <h1>OU Esports - Rocket League Scouting Database</h1>
+        <h1 onclick="window.location.href=window.location.pathname" style="cursor: pointer;" title="Return to Home">OU Esports - Rocket League Scouting Database</h1>
         <div class="admin-auth">
           <span id="admin-status">Mode: Public Viewer</span>
           <button id="auth-btn" class="btn-auth" onclick="toggleAuthModal()">Team Login</button>
@@ -74,11 +74,11 @@
           <form id="addTeamForm" autocomplete="off" onsubmit="event.preventDefault(); saveTeam();" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
             <div style="flex: 1; min-width: 250px;">
               <label style="font-size: 0.85rem; color: var(--text-muted);">School / Team Name</label>
-              <input type="text" id="team-name-input" placeholder="e.g. UT Austin" required autocomplete="off">
+              <input type="text" id="team-name-input" placeholder="e.g. UT Austin" required autocomplete="off" style="height: 42px; box-sizing: border-box;">
             </div>
             <div style="flex: 1; min-width: 200px;">
               <label style="font-size: 0.85rem; color: var(--text-muted);">Upload Team Logo</label>
-              <input type="file" id="team-logo-file" accept="image/*" style="background: var(--bg-input);">
+              <input type="file" id="team-logo-file" accept="image/*" style="background: var(--bg-input); height: 42px; padding-top: 6px; box-sizing: border-box; width: 100%; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
             </div>
             <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-input); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); height: 42px;">
               <span style="font-size: 1.2rem;">🎨</span>
@@ -101,7 +101,7 @@
 
     <!-- Main Display: Rosters -->
     <section id="rosters-container" style="margin-top: 30px;">
-      <h2 style="color: var(--text-primary);">Collegiate Teams & Rosters</h2>
+      <h2 style="color: var(--text-primary); margin-bottom: 20px;">Collegiate Teams & Rosters</h2>
       <div id="teams-grid" class="teams-grid"></div>
     </section>
 
@@ -238,7 +238,7 @@
                 <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Game Scores (OU - OPP)</span>
                 <div>
                   <button type="button" onclick="generateGameInputs()" class="btn" style="background: rgba(255,255,255,0.1); padding: 4px 8px; font-size: 0.75rem;">Auto-Generate Rows</button>
-                  <button type="button" onclick="addGameInputRow()" class="btn" style="background: var(--accent-gold); color: #000; padding: 4px 8px; font-size: 0.75rem;">+ Add 1</button>
+                  <button type="button" onclick="addGameInputRow()" class="btn" style="background: var(--accent-cream); color: #000; padding: 4px 8px; font-size: 0.75rem;">+ Add 1</button>
                 </div>
               </div>
               <div id="game-inputs-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -267,6 +267,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

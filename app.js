@@ -67,12 +67,13 @@ async function loadData() {
     return;
   }
 
-  // Handle URL Parameter Direct Linking (?team=Name)
+  // Handle URL Parameter Direct Linking (?team=Rogers-State-University)
   const urlParams = new URLSearchParams(window.location.search);
-  const urlTeam = urlParams.get('team');
-  if (urlTeam && !window.hasAutoScrolled) {
+  const urlTeamRaw = urlParams.get('team');
+  if (urlTeamRaw && !window.hasAutoScrolled) {
+      // Convert URL hyphens back into standard spaces for the search filter
       const searchBox = document.getElementById("search-input");
-      if (searchBox) searchBox.value = urlTeam;
+      if (searchBox) searchBox.value = urlTeamRaw.replace(/-/g, ' ');
       window.hasAutoScrolled = true;
   }
 
@@ -274,7 +275,9 @@ function copyTeamStats(teamId) {
 }
 
 function copyTeamLink(teamName) {
-  const link = window.location.origin + window.location.pathname + '?team=' + encodeURIComponent(teamName);
+  // Format "Rogers State University" into "Rogers-State-University" for cleaner URLs
+  const formattedName = teamName.replace(/\s+/g, '-');
+  const link = window.location.origin + window.location.pathname + '?team=' + encodeURIComponent(formattedName);
   navigator.clipboard.writeText(link).then(() => showToast(`Link for ${teamName} copied to clipboard!`));
 }
 
@@ -360,7 +363,7 @@ function editPlayerModal(playerId) {
   const p = players.find(p => p.id === playerId);
   if (!p) return;
   
-  document.getElementById('modal-name').innerText = `✏️️ Edit ${p.alias || p.handle}`;
+  document.getElementById('modal-name').innerText = `✏ Edit ${p.alias || p.handle}`;
   document.getElementById('modal-body').innerHTML = `
     <form onsubmit="event.preventDefault(); savePlayerEdit('${p.id}')" style="display: flex; flex-direction: column; gap: 12px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -663,7 +666,7 @@ function generatePlayerRowHTML(p) {
       </div>
       <div class="action-buttons" onclick="event.stopPropagation()">
         ${p.tracker_url ? `<a href="${p.tracker_url}" target="_blank" class="icon-btn desktop-link" style="text-decoration:none;">🔗</a>` : ''}
-        <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:var(--accent-red-bright); color:#000;" title="Delete Player" onclick="removePlayer('${p.id}')">🗑️</button>
+        <button class="${isAdmin ? '' : 'hidden'} admin-only icon-btn" style="background:var(--accent-red-bright); color:#000;" title="Delete Player" onclick="removePlayer('${p.id}')">🗑️️</button>
       </div>
     </div>
   `;
@@ -738,9 +741,12 @@ function renderRecentMatches() {
       const resultColor = isWin ? 'var(--accent-green)' : 'var(--accent-red-bright)';
       const displayType = m.league ? m.league : (m.type === 'Scrim' ? 'SCRIMS' : 'OFFICIAL');
       
+      // Pass the hyphenated name for cleaner URLs
+      const formattedOppName = oppName.replace(/\s+/g, '-');
+      
       return `
           <div class="recent-card" onclick="openMatchDetails('${m.id}')" title="Click to view details">
-              <img src="${oppLogo}" onclick="event.stopPropagation(); window.location.href='?team=${encodeURIComponent(oppName)}';" style="width: 42px; height: 42px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 4px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Jump to ${oppName} Roster">
+              <img src="${oppLogo}" onclick="event.stopPropagation(); window.location.href='?team=${encodeURIComponent(formattedOppName)}';" style="width: 42px; height: 42px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 4px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Jump to ${oppName} Roster">
               <div style="flex: 1; overflow: hidden;">
                   <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${m.date} • ${displayType}</div>
                   <div style="font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">vs ${oppName}</div>

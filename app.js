@@ -215,7 +215,7 @@ function openEditTeamModal(teamId) {
       <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
         <span style="font-size: 1.2rem;">🎨</span>
         <label for="edit-t-color" style="font-size: 0.9rem; color: #fff; cursor: pointer;">Team Color</label>
-        <input type="color" id="edit-t-color" value="${team.theme_color || '#222634'}" style="background: none; border: none; cursor: pointer; width: 35px; height: 35px; padding: 0; margin-left: 10px;">
+        <input type="color" id="edit-t-color" value="${team.theme_color || '#323232'}" style="background: none; border: none; cursor: pointer; width: 35px; height: 35px; padding: 0; margin-left: 10px;">
       </div>
       <div style="display: flex; gap: 10px; margin-top: 10px;">
          <button type="submit" class="btn" id="edit-t-save" style="flex: 1; background: var(--accent-green);">Save Updates</button>
@@ -271,6 +271,11 @@ function copyTeamStats(teamId) {
   });
 
   navigator.clipboard.writeText(text).then(() => showToast(`${team.name} Discord stats copied to clipboard!`));
+}
+
+function copyTeamLink(teamName) {
+  const link = window.location.origin + window.location.pathname + '?team=' + encodeURIComponent(teamName);
+  navigator.clipboard.writeText(link).then(() => showToast(`Link for ${teamName} copied to clipboard!`));
 }
 
 // ---------------------------------------------
@@ -355,7 +360,7 @@ function editPlayerModal(playerId) {
   const p = players.find(p => p.id === playerId);
   if (!p) return;
   
-  document.getElementById('modal-name').innerText = `✏️ Edit ${p.alias || p.handle}`;
+  document.getElementById('modal-name').innerText = `✏️️ Edit ${p.alias || p.handle}`;
   document.getElementById('modal-body').innerHTML = `
     <form onsubmit="event.preventDefault(); savePlayerEdit('${p.id}')" style="display: flex; flex-direction: column; gap: 12px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -567,20 +572,24 @@ function renderAll() {
     if (isOU) card.style.border = "1px solid var(--accent-red)";
 
     card.innerHTML = `
-      <div class="team-header" style="background: linear-gradient(90deg, ${team.theme_color || '#222634'}80, transparent);">
+      <div class="team-header" style="background: linear-gradient(90deg, ${team.theme_color || '#323232'}80, transparent);">
         <div style="display: flex; align-items: center; gap: 15px;">
           <img src="${team.logo}" class="team-logo" alt="${team.name}">
           <div>
             <h3 style="margin: 0; font-size: 1.3em; color: #fff;">${team.name} ${isOU ? '☝️' : ''} ${wlText}</h3>
-            <div style="margin-top: 4px;">
-              <em style="font-size: 0.85em; color: var(--text-muted);">Avg Peak: ${avgPeak} | 3v3: ${avg3v3} | 2v2: ${avg2v2} | 1v1: ${avg1v1}</em>
+            <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">Avg Peak: <strong style="color:var(--accent-cream);">${avgPeak}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">3v3: <strong style="color:#fff;">${avg3v3}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">2v2: <strong style="color:#fff;">${avg2v2}</strong></span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">1v1: <strong style="color:#fff;">${avg1v1}</strong></span>
             </div>
           </div>
         </div>
         <div class="action-buttons">
           ${!isOU ? `<button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openMatchModal('${team.id}')" title="Match History">⚔️ Log Match</button>` : ''}
-          <button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openAddPlayerModal('${team.id}')" style="background:var(--accent-green); color:#000;" title="Add Player">➕ Add Player</button>
-          <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy</button>
+          <button class="icon-btn team-only ${isTeam ? '' : 'hidden'}" onclick="openAddPlayerModal('${team.id}')" style="background:var(--accent-green); color:#000; font-weight:bold;" title="Add Player">➕ Add Player</button>
+          <button class="icon-btn" onclick="copyTeamStats('${team.id}')" title="Copy Team Stats">📋 Copy Stats</button>
+          <button class="icon-btn" onclick="copyTeamLink('${team.name}')" title="Copy Direct Link to Team">🔗 Copy Link</button>
           <div class="admin-only ${isAdmin ? '' : 'hidden'}" style="display:inline-block;">
             <button class="icon-btn" onclick="openEditTeamModal('${team.id}')" style="background:var(--accent-blue); color:#000;" title="Edit Team">✏️</button>
             ${!isOU ? `<button class="icon-btn" onclick="deleteTeam('${team.id}')" style="background:var(--accent-red-bright); color:#000;" title="Delete Team">🗑️</button>` : ''}
@@ -988,13 +997,36 @@ function setupLeagueAutocomplete() {
   const listContainer = document.getElementById("league-autocomplete-list");
   let currentFocus = -1;
   
+  // Show all previous options when clicked/focused
+  inp.addEventListener("focus", function() {
+      const val = this.value;
+      listContainer.innerHTML = '';
+      
+      const uniqueLeagues = [...new Set(matchLogs.map(m => m.league).filter(l => l && l.trim() !== ''))];
+      const matches = val ? uniqueLeagues.filter(l => l.toLowerCase().includes(val.toLowerCase())) : uniqueLeagues;
+      
+      if (matches.length === 0) { listContainer.classList.add('hidden'); return; }
+      
+      listContainer.classList.remove('hidden');
+      matches.forEach(match => {
+          const div = document.createElement("div");
+          div.innerHTML = match;
+          div.onclick = function() {
+              inp.value = match;
+              listContainer.classList.add('hidden');
+          };
+          listContainer.appendChild(div);
+      });
+  });
+
+  // Filter options while typing
   inp.addEventListener("input", function() {
       const val = this.value;
       listContainer.innerHTML = '';
-      if (!val) { listContainer.classList.add('hidden'); return; }
       
       const uniqueLeagues = [...new Set(matchLogs.map(m => m.league).filter(l => l && l.trim() !== ''))];
-      const matches = uniqueLeagues.filter(l => l.toLowerCase().includes(val.toLowerCase()));
+      const matches = val ? uniqueLeagues.filter(l => l.toLowerCase().includes(val.toLowerCase())) : uniqueLeagues;
+      
       if (matches.length === 0) { listContainer.classList.add('hidden'); return; }
       
       listContainer.classList.remove('hidden');
@@ -1093,6 +1125,7 @@ window.openPlayerModal = openPlayerModal;
 window.openAddPlayerModal = openAddPlayerModal;
 window.closeModal = closeModal;
 window.copyTeamStats = copyTeamStats;
+window.copyTeamLink = copyTeamLink;
 window.closeMatchModal = closeMatchModal;
 window.saveMatchLog = saveMatchLog;
 window.deleteMatchLog = deleteMatchLog;

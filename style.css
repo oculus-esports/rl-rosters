@@ -40,13 +40,27 @@ body {
   padding: 20px;
 }
 
+/* Faint Red/Cream Ambient Lighting */
 body::before {
   content: "";
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
   z-index: -1;
-  background: radial-gradient(circle at 10% 0%, rgba(78, 0, 2, 0.15) 0%, #000000 40%), 
-              radial-gradient(circle at 90% 100%, rgba(190, 180, 165, 0.05) 0%, #000000 40%);
+  background: radial-gradient(circle at 10% 0%, rgba(78, 0, 2, 0.15) 0%, transparent 40%), 
+              radial-gradient(circle at 90% 100%, rgba(190, 180, 165, 0.05) 0%, transparent 40%);
+}
+
+/* Full Page Faint B&W Stadium Background */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -2;
+  background-image: url('https://cdn.pixabay.com/photo/2021/08/11/11/15/rocket-league-6538234_1280.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(100%) opacity(0.06); 
+  pointer-events: none;
 }
 
 .container {
@@ -55,7 +69,7 @@ body::before {
 }
 
 /* -------------------------------------
-   Header & Nav with RL Background 
+   Header & Nav 
 ------------------------------------- */
 .main-header {
   border: 1px solid var(--border-color);
@@ -67,20 +81,11 @@ body::before {
 }
 
 .rl-header-bg {
-  /* Defaulting to a subtle, dark RL stadium background. */
-  background-image: url('https://cdn.pixabay.com/photo/2021/08/11/11/15/rocket-league-6538234_1280.jpg');
-  background-size: cover;
-  background-position: center 35%;
+  background: linear-gradient(90deg, #000000 0%, #000000 40%, var(--accent-red) 100%);
 }
 
 .header-overlay {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  /* Fades from pure black on the left to Deep OU Crimson on the right */
-  background: linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, rgba(78,0,2,0.6) 100%);
-  backdrop-filter: grayscale(100%); /* Turns the RL background image black & white */
-  -webkit-backdrop-filter: grayscale(100%);
-  z-index: 1;
+  display: none; /* Hidden since we moved the image to the body */
 }
 
 .header-top {
@@ -121,6 +126,7 @@ h1::before {
    Inputs, Dropdowns & Autocomplete 
 ------------------------------------- */
 .filters input[type="text"], 
+.filters select,
 .form-box input, 
 .form-box select,
 .modal-input {
@@ -142,13 +148,13 @@ h1::before {
   border-color: var(--accent-cream);
 }
 
-/* Force dark mode options on native HTML dropdown menus */
+/* Dark mode options for native dropdowns */
 select option {
   background-color: var(--bg-card);
   color: var(--text-primary);
 }
 
-/* Custom Dropdown Menu Styling */
+/* Custom Dropdown Arrow */
 .filters select, select.modal-input {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23beb4a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -156,6 +162,26 @@ select option {
   background-position: right 12px center;
   background-size: 16px;
   padding-right: 40px;
+}
+
+/* Custom File Upload Button */
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover,
+input[type="file"]::-webkit-file-upload-button:hover {
+  background-color: var(--accent-red);
 }
 
 /* Custom Autocomplete Wrappers */
@@ -355,28 +381,28 @@ select option {
 .sticky-filters {
   position: -webkit-sticky;
   position: sticky;
-  top: 0; /* Flush to the top edge */
+  top: 15px; 
   z-index: 100;
-  background: rgba(10, 10, 10, 0.98); /* Near solid background */
-  backdrop-filter: blur(24px); /* Heavy blur for anything peeking through */
+  background: rgba(10, 10, 10, 0.85); 
+  backdrop-filter: blur(24px); 
   -webkit-backdrop-filter: blur(24px);
   padding: 15px 20px; 
-  margin: -20px -20px 25px -20px; /* Pull to the absolute edges */
-  border-radius: 0 0 12px 12px; /* Smooth corners only at the bottom */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin: 0 0 25px 0; /* Removed negative margins to fix width */
+  border-radius: 12px; 
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 
 .filters {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap; /* Forces search and select to be perfectly in-line */
+  flex-wrap: nowrap; 
   max-width: 1280px;
   margin: 0 auto;
 }
 
 .filters input[type="text"] {
-  flex: 1; /* Search bar takes majority space */
+  flex: 1; 
 }
 
 .filters select {

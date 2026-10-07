@@ -754,7 +754,16 @@ function renderRecentMatches() {
   const grid = document.getElementById('recent-matches-grid');
   if (!container || !grid) return;
 
-  const sortedMatches = [...matchLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+  const sortedMatches = [...matchLogs].sort((a, b) => {
+    const dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    // Tiebreaker for same-day matches: higher ID / newer creation first
+    const idA = Number(a.id) || 0;
+    const idB = Number(b.id) || 0;
+    if (idA !== idB) return idB - idA;
+    // Fallback if IDs are alphanumeric strings or timestamps
+    return String(b.id).localeCompare(String(a.id));
+  }).slice(0, 20);
   if (sortedMatches.length === 0) {
       container.style.display = 'none';
       return;
@@ -907,7 +916,11 @@ function openMatchModal(teamId) {
   resetMatchForm();
 
   const list = document.getElementById('match-history-list');
-  const teamMatches = matchLogs.filter(m => m.team_id === teamId).sort((a,b) => new Date(b.date) - new Date(a.date));
+  const teamMatches = matchLogs.filter(m => m.team_id === teamId).sort((a, b) => {
+    const dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
   
   if (teamMatches.length === 0) {
     list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9em; text-align:center;">No matches logged yet.</p>';

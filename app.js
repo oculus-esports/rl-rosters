@@ -413,16 +413,16 @@ function editPlayerModal(playerId) {
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
          <div>
-           <label style="color: var(--text-muted); font-size: 0.85rem;">3v3 MMR</label>
-           <input type="number" id="edit-p-3v3" value="${p.standard_3v3_current_mmr || 0}" class="modal-input">
+           <label style="color: var(--text-muted); font-size: 0.85rem;">1v1 MMR</label>
+           <input type="number" id="edit-p-1v1" value="${p.duel_1v1_current_mmr || 0}" class="modal-input">
          </div>
          <div>
            <label style="color: var(--text-muted); font-size: 0.85rem;">2v2 MMR</label>
            <input type="number" id="edit-p-2v2" value="${p.doubles_2v2_current_mmr || 0}" class="modal-input">
          </div>
          <div>
-           <label style="color: var(--text-muted); font-size: 0.85rem;">1v1 MMR</label>
-           <input type="number" id="edit-p-1v1" value="${p.duel_1v1_current_mmr || 0}" class="modal-input">
+           <label style="color: var(--text-muted); font-size: 0.85rem;">3v3 MMR</label>
+           <input type="number" id="edit-p-3v3" value="${p.standard_3v3_current_mmr || 0}" class="modal-input">
          </div>
       </div>
       <div>

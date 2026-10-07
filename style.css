@@ -532,30 +532,32 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
 .stat-block {
   display: flex;
-  flex-direction: row; /* Flips it from stacked to inline */
+  flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 6px; /* Tightens the gap between label and icon/number */
+  justify-content: flex-start;
 }
 
 .stat-label {
   font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 45px; /* MAGIC TRICK: Forces all labels to be the exact same width so the rank icons align perfectly in a vertical column! */
+  letter-spacing: 0.5px;
+  width: auto; /* Drops the artificial 45px spacer so the label hugs the value naturally */
+  margin-right: 2px;
 }
 
 .stat-value {
-  font-size: 1.1rem; /* Bumped up from 1rem to make the numbers clearer */
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #fff;
+  color: #ffffff; /* Consistent crisp white across all stats */
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .stat-peak {
-  color: var(--accent-cream);
+  color: #ffffff; /* Sets Peak MMR to pure white instead of cream */
 }
 
 /* -------------------------------------

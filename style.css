@@ -492,12 +492,13 @@ input[type="file"]::-webkit-file-upload-button:hover {
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.1));
 }
 
+/* Rank Icon size inside each stat column */
 .micro-icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;   /* Increased from 18px */
+  height: 24px;  /* Increased from 18px */
   object-fit: contain;
   vertical-align: middle;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.1));
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.15));
 }
 
 .player-name-block {
@@ -538,22 +539,25 @@ input[type="file"]::-webkit-file-upload-button:hover {
   justify-content: flex-start;
 }
 
+/* Stat Label (PEAK, 3V3, 2V2, 1V1) */
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.85rem; /* Increased from 0.75rem */
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  width: auto; /* Drops the artificial 45px spacer so the label hugs the value naturally */
+  width: auto;
   margin-right: 2px;
 }
 
+/* MMR Value */
 .stat-value {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #ffffff; /* Consistent crisp white across all stats */
+  font-size: 1.2rem; /* Increased from 1.05rem / 1.1rem */
+  font-weight: 700;  /* Bold number for clear scanning */
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .stat-peak {

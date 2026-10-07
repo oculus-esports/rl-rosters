@@ -532,18 +532,21 @@ input[type="file"]::-webkit-file-upload-button:hover {
 
 .stat-block {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* Flips it from stacked to inline */
+  align-items: center;
+  gap: 10px;
 }
 
 .stat-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
+  width: 45px; /* MAGIC TRICK: Forces all labels to be the exact same width so the rank icons align perfectly in a vertical column! */
 }
 
 .stat-value {
-  font-size: 1rem;
+  font-size: 1.1rem; /* Bumped up from 1rem to make the numbers clearer */
   font-weight: 600;
   color: #fff;
   display: flex;

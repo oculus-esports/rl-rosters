@@ -258,20 +258,48 @@ async function saveTeamEdit(teamId) {
   await loadData();
 }
 
-function copyTeamStats(teamId) {
+async function copyTeamStats(teamId) {
   const team = teams.find(t => t.id === teamId);
-  const teamPlayers = players.filter(p => p.team_id === teamId && p.role !== 'Archived');
+  const teamCard = document.getElementById(`team-section-${teamId}`);
   
-  let text = `**${team.name} Rosters & Stats**\n\n`;
-  teamPlayers.forEach(p => {
-    text += `**${p.alias || p.handle}** ${p.role ? `(${p.role})` : ''}\n`;
-    text += `- Peak: ${p.peak_rating || 'N/A'}\n`;
-    text += `- 3v3: ${p.standard_3v3_current_mmr || 0}\n`;
-    text += `- 2v2: ${p.doubles_2v2_current_mmr || 0}\n`;
-    text += `- 1v1: ${p.duel_1v1_current_mmr || 0}\n\n`;
-  });
+  if (!teamCard || !team) return;
 
-  navigator.clipboard.writeText(text).then(() => showToast(`${team.name} Discord stats copied to clipboard!`));
+  // 1. Temporarily hide the action buttons so they don't show up in the screenshot
+  const actionButtons = teamCard.querySelector('.action-buttons');
+  const originalDisplay = actionButtons.style.display;
+  actionButtons.style.display = 'none';
+
+  // Provide a loading toast since image generation takes a brief second
+  showToast(`Generating image for ${team.name}...`);
+
+  try {
+    // 2. Take the virtual screenshot
+    const canvas = await window.html2canvas(teamCard, {
+      backgroundColor: '#141414', // Matches your dark theme card background
+      scale: 2, // Doubles the resolution for a crisp, high-quality image
+      useCORS: true // Required so external images (like logos) don't break the snapshot
+    });
+
+    // 3. Restore the action buttons back to the UI
+    actionButtons.style.display = originalDisplay;
+
+    // 4. Convert the snapshot to a PNG Blob and write to clipboard
+    canvas.toBlob(async (blob) => {
+      try {
+        const item = new ClipboardItem({ "image/png": blob });
+        await navigator.clipboard.write([item]);
+        showToast(`📸 ${team.name} roster image copied to clipboard!`);
+      } catch (err) {
+        console.error("Clipboard Error:", err);
+        showToast("Failed to copy image. (Clipboard API requires HTTPS)");
+      }
+    }, "image/png");
+
+  } catch (err) {
+    console.error("html2canvas Error:", err);
+    actionButtons.style.display = originalDisplay;
+    showToast("Error generating team image.");
+  }
 }
 
 function copyTeamLink(teamName) {

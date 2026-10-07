@@ -264,10 +264,9 @@ async function copyTeamStats(teamId) {
   
   if (!teamCard || !team) return;
 
-  // 1. Temporarily hide the action buttons so they don't show up in the screenshot
-  const actionButtons = teamCard.querySelector('.action-buttons');
-  const originalDisplay = actionButtons.style.display;
-  actionButtons.style.display = 'none';
+  // 1. Temporarily hide ALL action buttons (team header AND individual player rows)
+  const actionButtons = teamCard.querySelectorAll('.action-buttons');
+  actionButtons.forEach(btn => btn.style.display = 'none');
 
   // Provide a loading toast since image generation takes a brief second
   showToast(`Generating image for ${team.name}...`);
@@ -275,13 +274,13 @@ async function copyTeamStats(teamId) {
   try {
     // 2. Take the virtual screenshot
     const canvas = await window.html2canvas(teamCard, {
-      backgroundColor: '#141414', // Matches your dark theme card background
-      scale: 2, // Doubles the resolution for a crisp, high-quality image
-      useCORS: true // Required so external images (like logos) don't break the snapshot
+      backgroundColor: '#141414', 
+      scale: 2, 
+      useCORS: true 
     });
 
-    // 3. Restore the action buttons back to the UI
-    actionButtons.style.display = originalDisplay;
+    // 3. Restore all the action buttons back to the UI
+    actionButtons.forEach(btn => btn.style.display = '');
 
     // 4. Convert the snapshot to a PNG Blob and write to clipboard
     canvas.toBlob(async (blob) => {
@@ -297,7 +296,7 @@ async function copyTeamStats(teamId) {
 
   } catch (err) {
     console.error("html2canvas Error:", err);
-    actionButtons.style.display = originalDisplay;
+    actionButtons.forEach(btn => btn.style.display = '');
     showToast("Error generating team image.");
   }
 }
@@ -1129,12 +1128,17 @@ function getPlayerHighestCurrentIcon(p) {
 }
 
 function getRLRankIcon(mmr, mode = '3v3') {
-  const baseUrl = 'https://trackercdn.com/cdn/tracker.gg/rocket-league/ranks/';
+  // Routing the Tracker Network images through a free caching proxy (wsrv.nl) 
+  // automatically adds the CORS headers required for html2canvas to "see" them!
+  const baseUrl = 'https://wsrv.nl/?url=trackercdn.com/cdn/tracker.gg/rocket-league/ranks/';
+  
   if (!mmr || mmr <= 0) return baseUrl + 's4-0.png';
+  
   let ssl, gc3, gc2, gc1, c3, c2, c1, d1, p1, g1, s1;
   if (mode === '1v1') { ssl=1355; gc3=1296; gc2=1236; gc1=1176; c3=1115; c2=1055; c1=995; d1=815; p1=635; g1=440; s1=275; }
   else if (mode === '2v2') { ssl=1875; gc3=1707; gc2=1576; gc1=1435; c3=1315; c2=1196; c1=1075; d1=835; p1=655; g1=475; s1=296; }
   else { ssl=1860; gc3=1715; gc2=1576; gc1=1436; c3=1315; c2=1195; c1=1076; d1=835; p1=655; g1=475; s1=296; }
+  
   if (mmr >= ssl) return baseUrl + 's15rank22.png'; if (mmr >= gc3) return baseUrl + 's15rank21.png';
   if (mmr >= gc2) return baseUrl + 's15rank20.png'; if (mmr >= gc1) return baseUrl + 's15rank19.png';
   if (mmr >= c3) return baseUrl + 's4-18.png'; if (mmr >= c2) return baseUrl + 's4-17.png'; if (mmr >= c1) return baseUrl + 's4-16.png';
